@@ -1,0 +1,210 @@
+# DevNet – Datacenter BYOG DoE (PyPSA)
+
+This repository contains a **research-grade DevNet workflow** for studying datacenter
+**Bring-Your-Own-Generation (BYOG)** impacts on grid feasibility, congestion, and
+Locational Marginal Prices (LMPs), using **PyPSA**.
+
+The project is designed as a **deterministic, lightweight “USA-lite” 6-bus system**
+that supports systematic stress testing, reproducible plots, and supervisory reporting,
+while remaining structurally compatible with PyPSA-USA scale-up.
+
+---
+
+## High-level workflow
+
+The intended execution flow is **menu-driven** via `devnet_menu.py`:
+
+```bash
+    1. Build SLD once        → devnet_sld.py
+    2. Run DoE sanity once   → devnet_doe.py
+    3. Stress / asymptotes   → devnet_stress.py   (iterative)
+    4. Plot load metrics     → devnet_load_plot.py
+    5. Plot MC + LMP heatmap → devnet_lmp_plot.py
+```
+
+**Important**
+- Steps **(1)** and **(2)** should only be re-run if you intentionally want to
+  rebuild the base DevNet.
+- Step **(3)** is the primary research loop.
+- Steps **(4)** and **(5)** are fast, repeatable visualization passes.
+
+---
+
+## Entry point
+
+### Run the menu
+```bash
+    python devnet_menu.py
+```
+
+This launches an interactive CLI that:
+
+* Runs scripts in the correct order
+* Preserves the active Python environment
+* Keeps console output structured and readable
+
+---
+
+## Script overview
+
+### `devnet_sld.py` — Network construction
+
+* Builds a **6-bus USA-lite DevNet**
+* Exports CSVs, logs, and an SLD image
+* Output directory:
+
+```bash
+    ./devnet-sld/
+        ├─ csv/
+        ├─ plots/
+        └─ logs/
+```
+
+### `devnet_doe.py` — Sanity & baseline validation
+
+* Loads exported DevNet CSVs
+* Confirms DC-OPF feasibility and baseline behavior
+* Acts as a “known-good” checkpoint
+
+### `devnet_stress.py` — Core research engine
+
+* Interactive stress testing and asymptote discovery
+* Supports:
+
+  * Load scaling (`k_load`)
+  * Corridor derating (`k_line`)
+  * Generator marginal cost perturbations (`mc_bus`)
+  * Optional datacenter injection (BYOG)
+* Each committed run generates:
+
+```bash
+  ./devnet-sld/stress_out/
+    ├─ c1_*.csv
+    ├─ c1_dashboard.md
+    ├─ c2_*.csv
+    ├─ c2_dashboard.md
+    └─ index.html
+```
+
+* `index.html` is automatically regenerated after each commit.
+
+### `devnet_load_plot.py` — Load vs system metrics
+
+* Produces a 4-panel stacked plot:
+
+  1. System objective (cost)
+  2. LMP spread
+  3. Maximum line loading (p.u.)
+  4. Near-binding constraint count
+* Used to identify:
+
+  * Feasibility boundaries
+  * Linear cost scaling with load
+* Output:
+
+```bash
+    ./devnet-sld/stress_out/load_vs_metrics.png
+```
+
+### `devnet_lmp_plot.py` — MC table + LMP heatmap
+
+* Composite visualization:
+
+  * Left: MC perturbation table (per bus)
+  * Middle: LMP spread heatmap (case-aligned)
+  * Right: metrics panel:
+
+    * max_loading_pu
+    * near_bind_ct
+    * objective sparkline
+    * top congested lines
+* Directly links:
+  **perturbation → congestion → LMP separation**
+* Output:
+
+```bash
+  ./devnet-sld/stress_out/heatmap_lmp_spread.png
+```
+
+---
+
+## Visualization & reporting
+
+After running stress cases:
+
+* Open the interactive report:
+
+  ```
+  ./devnet-sld/stress_out/index.html
+  ```
+* Regenerate plots at any time using menu options **(4)** and **(5)**
+
+> Note: Plot scripts expect `devnet_plots.xlsx` to exist.
+> If missing, run **devnet_stress.py** first.
+
+---
+
+## Design philosophy
+
+* **Research-grade determinism** (no hidden state)
+* **Fast iteration** (small network, structured sweeps)
+* **Clear causal traceability**
+
+  * perturbation → constraint → LMP
+* **Supervisor-ready artifacts**
+
+  * CSVs, dashboards, publication-quality plots
+
+---
+
+## Dependencies
+
+* Python 3.10+
+* PyPSA
+* pandas
+* numpy
+* matplotlib
+* openpyxl
+
+(Use the same environment for all scripts; `devnet_menu.py` preserves it.)
+
+---
+
+## Status
+
+* Stable
+* Reproducible
+* Actively used for PhD research on datacenter BYOG and grid stress behavior
+
+---
+
+## Next steps (planned)
+
+* Analysis module (post-processing, hypothesis tests)
+* Scaling bridge to PyPSA-USA
+* Automated scenario batch runs
+
+---
+
+## Academic contribution
+
+This work contributes a **research-grade, reproducible framework** for studying datacenter
+Bring-Your-Own-Generation (BYOG) impacts on power system feasibility, congestion, and
+locational marginal prices (LMPs). By combining a deliberately lightweight but structurally
+faithful 6-bus “USA-lite” DevNet with systematic stress testing (load growth, corridor
+derating, and marginal cost perturbations), the framework enables clear causal tracing from
+datacenter-driven perturbations to binding constraints and nodal price separation. The
+approach bridges the gap between abstract academic test cases and operator-relevant grid
+behavior, providing a scalable experimental scaffold that can be extended toward
+PyPSA-USA–scale formulations while preserving interpretability, determinism, and
+publication-quality artifacts.
+
+---
+
+## AI assistance
+
+This work benefited from the use of ChatGPT (OpenAI) as a productivity aid for code
+organization, documentation, and workflow clarity. All modeling decisions, analysis, and
+interpretation remain the responsibility of the author.
+
+---
