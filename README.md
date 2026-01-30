@@ -186,6 +186,46 @@ After running stress cases:
 
 ---
 
+## Environment & setup
+
+The `pypsa-zn` workflow has been **developed and tested** in the following environment:
+
+### Tested environment
+
+- **Operating system**
+  - Windows 11 Pro (x64)
+  - Ubuntu 22.04 LTS (x86_64)
+
+- **Python**
+  - Python **3.10.x**
+  - Python **3.11.x** (verified working)
+
+- **Core packages**
+  - pypsa
+  - numpy
+  - pandas
+  - matplotlib
+  - openpyxl
+  - scipy
+  - networkx
+
+- **Solver**
+  - HiGHS (via PyPSA default configuration)
+  - Tested using PyPSA’s built-in solver interface
+
+### Recommended setup (clean install)
+
+```bash
+python -m venv pypsa-zn-env
+source pypsa-zn-env/bin/activate   # Linux / macOS
+pypsa-zn-env\Scripts\activate      # Windows
+
+pip install --upgrade pip
+pip install pypsa numpy pandas matplotlib scipy networkx openpyxl
+```
+
+---
+
 ## Academic contribution
 
 This work contributes a **research-grade, reproducible framework** for studying datacenter
