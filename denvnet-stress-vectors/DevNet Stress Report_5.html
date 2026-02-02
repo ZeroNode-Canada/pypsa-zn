@@ -39,10 +39,16 @@ h1{margin:0 0 8px 0} h2{margin:0 0 10px 0}
 <tr><td style='border:1px solid #ddd;padding:6px'><a href='#c14'>c14</a></td><td style='border:1px solid #ddd;padding:6px'>single</td><td style='border:1px solid #ddd;padding:6px'>2.400e+06</td><td style='border:1px solid #ddd;padding:6px'>0.000</td><td style='border:1px solid #ddd;padding:6px'>0.000</td><td style='border:1px solid #ddd;padding:6px'>0</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
 <tr><td style='border:1px solid #ddd;padding:6px'><a href='#c15'>c15</a></td><td style='border:1px solid #ddd;padding:6px'>single</td><td style='border:1px solid #ddd;padding:6px'>nan</td><td style='border:1px solid #ddd;padding:6px'>nan</td><td style='border:1px solid #ddd;padding:6px'>nan</td><td style='border:1px solid #ddd;padding:6px'>0</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
 <tr><td style='border:1px solid #ddd;padding:6px'><a href='#c16'>c16</a></td><td style='border:1px solid #ddd;padding:6px'>single</td><td style='border:1px solid #ddd;padding:6px'>nan</td><td style='border:1px solid #ddd;padding:6px'>nan</td><td style='border:1px solid #ddd;padding:6px'>nan</td><td style='border:1px solid #ddd;padding:6px'>0</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c17'>c17</a></td><td style='border:1px solid #ddd;padding:6px'>single</td><td style='border:1px solid #ddd;padding:6px'>1.500e+06</td><td style='border:1px solid #ddd;padding:6px'>0.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c18'>c18</a></td><td style='border:1px solid #ddd;padding:6px'>single</td><td style='border:1px solid #ddd;padding:6px'>1.500e+06</td><td style='border:1px solid #ddd;padding:6px'>0.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>3</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c19'>c19</a></td><td style='border:1px solid #ddd;padding:6px'>single</td><td style='border:1px solid #ddd;padding:6px'>1.500e+06</td><td style='border:1px solid #ddd;padding:6px'>0.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>4</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c20'>c20</a></td><td style='border:1px solid #ddd;padding:6px'>single</td><td style='border:1px solid #ddd;padding:6px'>1.500e+06</td><td style='border:1px solid #ddd;padding:6px'>0.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>4</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c21'>c21</a></td><td style='border:1px solid #ddd;padding:6px'>single</td><td style='border:1px solid #ddd;padding:6px'>1.500e+06</td><td style='border:1px solid #ddd;padding:6px'>0.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>6</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c22'>c22</a></td><td style='border:1px solid #ddd;padding:6px'>single</td><td style='border:1px solid #ddd;padding:6px'>1.500e+06</td><td style='border:1px solid #ddd;padding:6px'>0.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>6</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
 </table>
 </div>
 <div class='right-col'>
-<img class='side-img' src='devnet-sld.png' alt='DevNet SLD'>
+<img class='side-img' src='../plots/devnet-sld.png' alt='DevNet SLD'>
 <pre class='side-pre'>
 DevNet base params:
   Buses_N            = 6
@@ -85,6 +91,12 @@ Per-bus balance (local surplus/deficit):
 <a href='#c14'>c14</a>
 <a href='#c15'>c15</a>
 <a href='#c16'>c16</a>
+<a href='#c17'>c17</a>
+<a href='#c18'>c18</a>
+<a href='#c19'>c19</a>
+<a href='#c20'>c20</a>
+<a href='#c21'>c21</a>
+<a href='#c22'>c22</a>
 </div>
 <div class='card' id='c1'>
 <h2>c1</h2>
@@ -430,6 +442,138 @@ near_bind_ct(&gt;=.95): 0
 <div style='margin-top:10px'><b>CSV artifacts:</b></div>
 <pre>
 c16_single_objective.csv
+</pre>
+</div>
+<div class='card' id='c17'>
+<h2>c17</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c17::single
+----------------------------------------
+args: scenario=single  mc_mode=set  line=-  k_load={}  k_line={}  mc_bus={}  dc_site=N
+objective        : 1.500e+06
+lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_ERCOT:1.00 | L_PJM_NE_SERC_SE:0.87
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c17_single_line_loading_pu.csv
+c17_single_lmp.csv
+c17_single_objective.csv
+</pre>
+</div>
+<div class='card' id='c18'>
+<h2>c18</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c18::single
+----------------------------------------
+args: scenario=single  mc_mode=set  line=-  k_load={}  k_line={&quot;L_WECC_NW_WECC_SW&quot;: 0.8, &quot;L_WECC_SW_SPP_MISO&quot;: 0.8, &quot;L_SPP_MISO_ERCOT&quot;: 0.8, &quot;L_SPP_MISO_PJM_NE&quot;: 0.8, &quot;L_PJM_NE_SERC_SE&quot;: 0.8, &quot;L_SERC_SE_ERCOT&quot;: 0.8}  mc_bus={}  dc_site=N
+objective        : 1.500e+06
+lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 3
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_ERCOT:1.00 | L_PJM_NE_SERC_SE:1.00
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c18_single_line_loading_pu.csv
+c18_single_lmp.csv
+c18_single_objective.csv
+</pre>
+</div>
+<div class='card' id='c19'>
+<h2>c19</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c19::single
+----------------------------------------
+args: scenario=single  mc_mode=set  line=-  k_load={}  k_line={&quot;L_WECC_NW_WECC_SW&quot;: 0.6, &quot;L_WECC_SW_SPP_MISO&quot;: 0.6, &quot;L_SPP_MISO_ERCOT&quot;: 0.6, &quot;L_SPP_MISO_PJM_NE&quot;: 0.6, &quot;L_PJM_NE_SERC_SE&quot;: 0.6, &quot;L_SERC_SE_ERCOT&quot;: 0.6}  mc_bus={}  dc_site=N
+objective        : 1.500e+06
+lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+max_loading_pu   : 1.000 @ L_WECC_NW_WECC_SW
+near_bind_ct(&gt;=.95): 4
+top_lines        : L_WECC_NW_WECC_SW:1.00 | L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_ERCOT:1.00
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c19_single_line_loading_pu.csv
+c19_single_lmp.csv
+c19_single_objective.csv
+</pre>
+</div>
+<div class='card' id='c20'>
+<h2>c20</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c20::single
+----------------------------------------
+args: scenario=single  mc_mode=set  line=-  k_load={}  k_line={&quot;L_WECC_NW_WECC_SW&quot;: 0.4, &quot;L_WECC_SW_SPP_MISO&quot;: 0.4, &quot;L_SPP_MISO_ERCOT&quot;: 0.4, &quot;L_SPP_MISO_PJM_NE&quot;: 0.4, &quot;L_PJM_NE_SERC_SE&quot;: 0.4, &quot;L_SERC_SE_ERCOT&quot;: 0.4}  mc_bus={}  dc_site=N
+objective        : 1.500e+06
+lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+max_loading_pu   : 1.000 @ L_WECC_NW_WECC_SW
+near_bind_ct(&gt;=.95): 4
+top_lines        : L_WECC_NW_WECC_SW:1.00 | L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_ERCOT:1.00
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c20_single_line_loading_pu.csv
+c20_single_lmp.csv
+c20_single_objective.csv
+</pre>
+</div>
+<div class='card' id='c21'>
+<h2>c21</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c21::single
+----------------------------------------
+args: scenario=single  mc_mode=set  line=-  k_load={}  k_line={&quot;L_WECC_NW_WECC_SW&quot;: 0.2, &quot;L_WECC_SW_SPP_MISO&quot;: 0.2, &quot;L_SPP_MISO_ERCOT&quot;: 0.2, &quot;L_SPP_MISO_PJM_NE&quot;: 0.2, &quot;L_PJM_NE_SERC_SE&quot;: 0.2, &quot;L_SERC_SE_ERCOT&quot;: 0.2}  mc_bus={}  dc_site=N
+objective        : 1.500e+06
+lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+max_loading_pu   : 1.000 @ L_WECC_NW_WECC_SW
+near_bind_ct(&gt;=.95): 6
+top_lines        : L_WECC_NW_WECC_SW:1.00 | L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_ERCOT:1.00
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c21_single_line_loading_pu.csv
+c21_single_lmp.csv
+c21_single_objective.csv
+</pre>
+</div>
+<div class='card' id='c22'>
+<h2>c22</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c22::single
+----------------------------------------
+args: scenario=single  mc_mode=set  line=-  k_load={}  k_line={&quot;L_WECC_NW_WECC_SW&quot;: 0.1, &quot;L_WECC_SW_SPP_MISO&quot;: 0.1, &quot;L_SPP_MISO_ERCOT&quot;: 0.1, &quot;L_SPP_MISO_PJM_NE&quot;: 0.1, &quot;L_PJM_NE_SERC_SE&quot;: 0.1, &quot;L_SERC_SE_ERCOT&quot;: 0.1}  mc_bus={}  dc_site=N
+objective        : 1.500e+06
+lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+max_loading_pu   : 1.000 @ L_WECC_NW_WECC_SW
+near_bind_ct(&gt;=.95): 6
+top_lines        : L_WECC_NW_WECC_SW:1.00 | L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_ERCOT:1.00
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c22_single_line_loading_pu.csv
+c22_single_lmp.csv
+c22_single_objective.csv
 </pre>
 </div>
 </body></html>

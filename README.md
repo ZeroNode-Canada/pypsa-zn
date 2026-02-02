@@ -20,13 +20,14 @@ The intended execution flow is **menu-driven** via `devnet_menu.py`:
     3. Stress / asymptotes   → devnet_stress.py   (iterative)
     4. Plot load metrics     → devnet_load_plot.py
     5. Plot MC + LMP heatmap → devnet_lmp_plot.py
+    6. Plot line deration    → devnet_line_plot.py
 ```
 
 **Important**
 - Steps **(1)** and **(2)** should only be re-run if you intentionally want to
   rebuild the base DevNet.
 - Step **(3)** is the primary research loop.
-- Steps **(4)** and **(5)** are fast, repeatable visualization passes.
+- Steps **(4)**, **(5)**, and **(6)** are fast, repeatable visualization passes.
 
 ---
 
@@ -126,6 +127,26 @@ This launches an interactive CLI that:
   ./devnet-sld/stress_out/heatmap_lmp_spread.png
 ```
 
+### `devnet_line_plot.py` — Line deration vs system metrics
+
+* Produces a 4-panel stacked plot against **transmission line deration (k_line)**:
+
+  1. System objective (cost)
+  2. LMP spread
+  3. Maximum line loading (p.u.)
+  4. Near-binding constraint count
+
+* X-axis is ordered as:
+  **1.0 → 0.8 → 0.6 → 0.4 → 0.2 → 0.1**
+
+* Used to isolate **pure network capacity stress** effects independent of load growth.
+
+* Output:
+
+```bash
+  ./devnet-sld/stress_out/line_vs_metrics.png
+```
+
 ---
 
 ## Visualization & reporting
@@ -137,7 +158,7 @@ After running stress cases:
   ```
   ./devnet-sld/stress_out/index.html
   ```
-* Regenerate plots at any time using menu options **(4)** and **(5)**
+* Regenerate plots at any time using menu options **(4)**, **(5)**, and **(6)**
 
 > Note: Plot scripts expect `devnet_plots.xlsx` to exist.
 > If missing, run **devnet_stress.py** first.

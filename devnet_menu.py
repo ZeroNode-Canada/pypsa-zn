@@ -79,6 +79,10 @@ def print_header():
         "     - Right: metrics panel (max_loading_pu, near_bind_ct, objective sparkline, top congested lines)\n"
         "     - Use this to visually link mc perturbations → congestion → LMP separation\n"
         "\n"
+        "  6) Line deration vs system metrics (devnet_line_plot.py)\n"
+        "     - Produces a 4-panel PNG: objective, LMP spread, max line loading, near-bind count\n"
+        "     - X-axis is k_line (1.0 → 0.1) for quick line-deration sensitivity scans\n"
+        "\n"
         "  Notes:\n"
         "   - (4) and (5) expect the stress workbook to exist (devnet_plots.xlsx).\n"
         "   - If plots fail due to missing workbook/sheet, run option (3) first.\n"
@@ -92,6 +96,7 @@ def print_menu():
     print("  3) Find Network Asymptotes (devnet_stress.py)")
     print("  4) Plot: Load vs system metrics (devnet_load_plot.py)")
     print("  5) Plot: MC table + LMP spread heatmap + metrics panel (devnet_lmp_plot.py)")
+    print("  6) Plot: Line deration vs system metrics (devnet_line_plot.py)")
     print("  0) Exit")
 
 def main():
@@ -117,6 +122,9 @@ def main():
         elif choice == "5":
             rc = run_script("devnet_lmp_plot.py")
             input(f"\nFinished devnet_lmp_plot.py (exit code {rc}). Press Enter to return to menu...")
+        elif choice == "6":
+            rc = run_script("devnet_line_plot.py")
+            input(f"\nFinished devnet_line_plot.py (exit code {rc}). Press Enter to return to menu...")
         elif choice == "0":
             print("\nExiting devnet_menu.py\n")
             return 0

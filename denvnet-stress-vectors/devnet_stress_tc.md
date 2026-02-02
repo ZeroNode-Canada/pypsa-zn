@@ -33,6 +33,10 @@ DevNet Stress Test Vector: Structure, design and implementation
       - [Topology-Constrained::Test Case 2 B: Results](#topology-constrainedtest-case-2-b-results)
         - [ASR-DASH — Commit `c3` (single): Run Configuration](#asr-dash--commit-c3-single-run-configuration)
         - [Explanation: Near-Binding Count (`near_bind_ct`) = 6](#explanation-near-binding-count-near_bind_ct--6)
+    - [DevNet Stress Test::Transmission Line capacity deration::Test Case 2 C](#devnet-stress-testtransmission-line-capacity-derationtest-case-2-c)
+      - [Topology-Constrained::Test Case 2 C: Conditions](#topology-constrainedtest-case-2-c-conditions)
+      - [Topology-Constrained::Test Case 2 C: Expected Results](#topology-constrainedtest-case-2-c-expected-results)
+        - [DevNet Stress Test::Transmission Line capacity deration:Test Case 2 C: Results](#devnet-stress-testtransmission-line-capacity-derationtest-case-2-c-results)
     - [DevNet Stress Test::LMP Spread (`lmp_spread`)::Test Case 3](#devnet-stress-testlmp-spread-lmp_spreadtest-case-3)
       - [LMP Spread (`lmp_spread`)::Test Case 3 A: Conditions](#lmp-spread-lmp_spreadtest-case-3-a-conditions)
       - [LMP Spread (`lmp_spread`)::Test Case 3 A: Expected Results](#lmp-spread-lmp_spreadtest-case-3-a-expected-results)
@@ -267,7 +271,6 @@ $Operating Cost = \{Total System Load * c_g\}\equiv$ {
 ##### DevNet Stress Test::Local-Supply Dominated:Test Case 1 C: Results
 **Refer:** [devnet_plots.xlsx:DevNet_load<>SystemCost](devnet_plots.xlsx)  
 
-
 ---
 
 ### DevNet Stress Test::Topology-Constrained::Test Case 2
@@ -400,6 +403,75 @@ $Lines_{effective}$ [
   * $\frac{|F_{\text{line}}|}{s_{\text{nom, effective}}} \ge 0.95$
 * ✅ Therefore `near_bind_ct = 6`
 * Near-binding lines are those whose **post-solution loading ≥ 0.95 p.u.**, not those merely configured with low `k_line`.
+
+---
+
+### DevNet Stress Test::Transmission Line capacity deration::Test Case 2 C
+Refer:  
+- [DevNet Stress Report_5.html](./DevNet%20Stress%20Report_5.html)  
+- Commit ID: [17,... 22]
+
+**Objective: Derate transmission line capacities incrementally from default 1.0 > 0.1 and observe effect on near binding constraint count (near_bind_ct), max_loading_pu, LMP Spread and system operational costs- objective function**
+
+#### Topology-Constrained::Test Case 2 C: Conditions
+$Bus_{Load} = Bus_{GenCap}$  
+$Bus_{GenCap} = 8000.0 MW$  
+$Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
+$Bus_{LoadStressFactor} = Bus_{Load}/Bus_{GenCap} = 1.0\text{ default}$  
+$Bus_{Load} = 5000.0 MW$  
+$Total System Load = Buses_N * Bus_{Load} = 6 * 5000 = 30,000\text{ MW}$  
+
+$line_{snom} = 5,000\text{ MW}$  
+$c_g = marginal cost (USD/MWh) = 50.00$  
+
+k_line= {  
+    "L_WECC_NW_WECC_SW": 1.0, "L_WECC_SW_SPP_MISO": 1.0, "L_SPP_MISO_ERCOT": 1.0,  
+    "L_SPP_MISO_PJM_NE": 1.0, "L_PJM_NE_SERC_SE": 1.0, "L_SERC_SE_ERCOT": 1.0  
+     }  
+$line_{snom} = 5000$  
+$line_{effectiveCap} = 1.0 * 5000 = 5000\text{ MW}$  
+
+k_line= {  
+    "L_WECC_NW_WECC_SW": 0.8, "L_WECC_SW_SPP_MISO": 0.8, "L_SPP_MISO_ERCOT": 0.8,  
+    "L_SPP_MISO_PJM_NE": 0.8, "L_PJM_NE_SERC_SE": 0.8, "L_SERC_SE_ERCOT": 0.8  
+     }  
+$line_{snom} = 5000$  
+$line_{effectiveCap} = 0.8 * 5000 = 4000\text{ MW}$  
+
+k_line= {  
+    "L_WECC_NW_WECC_SW": 0.6, "L_WECC_SW_SPP_MISO": 0.6, "L_SPP_MISO_ERCOT": 0.6,  
+    "L_SPP_MISO_PJM_NE": 0.6, "L_PJM_NE_SERC_SE": 0.6, "L_SERC_SE_ERCOT": 0.6  
+     }  
+$line_{snom} = 5000$  
+$line_{effectiveCap} = 0.6 * 5000 = 3000\text{ MW}$  
+
+k_line= {  
+    "L_WECC_NW_WECC_SW": 0.4, "L_WECC_SW_SPP_MISO": 0.4, "L_SPP_MISO_ERCOT": 0.4,  
+    "L_SPP_MISO_PJM_NE": 0.4, "L_PJM_NE_SERC_SE": 0.4, "L_SERC_SE_ERCOT": 0.4  
+     }  
+$line_{snom} = 5000$  
+$line_{effectiveCap} = 0.4 * 5000 = 2000\text{ MW}$  
+
+k_line= {  
+    "L_WECC_NW_WECC_SW": 0.2, "L_WECC_SW_SPP_MISO": 0.2, "L_SPP_MISO_ERCOT": 0.2,  
+    "L_SPP_MISO_PJM_NE": 0.2, "L_PJM_NE_SERC_SE": 0.2, "L_SERC_SE_ERCOT": 0.2  
+     }  
+$line_{snom} = 5000$  
+$line_{effectiveCap} = 0.2 * 5000 = 1000\text{ MW}$  
+
+k_line= {  
+    "L_WECC_NW_WECC_SW": 0.1, "L_WECC_SW_SPP_MISO": 0.1, "L_SPP_MISO_ERCOT": 0.1,  
+    "L_SPP_MISO_PJM_NE": 0.1, "L_PJM_NE_SERC_SE": 0.1, "L_SERC_SE_ERCOT": 0.1  
+     }  
+$line_{snom} = 5000$  
+$line_{effectiveCap} = 0.1 * 5000 = 500\text{ MW}$  
+
+#### Topology-Constrained::Test Case 2 C: Expected Results
+$Operating Cost = \{Total System Load * c_g\} = \{Buses_N * Bus_{Load} * c_g\}$  
+$= \{6 * 5000 * 50\} = USD\text{ 1,500,000}$  
+
+##### DevNet Stress Test::Transmission Line capacity deration:Test Case 2 C: Results
+**Refer:** [devnet_plots.xlsx:DevNet_line<>near_bind_ct](devnet_plots.xlsx)  
 
 ---
 
@@ -1125,7 +1197,7 @@ Refer:
   "PJM_NE": 60.0,
   "SERC_SE": 70.0,
   "ERCOT": 70.0
-}  
+}  $$
 
 3: mc_bus = {
   "WECC_NW": 70.0,
