@@ -89,6 +89,9 @@ This launches an interactive CLI that:
 
 * `index.html` is automatically regenerated after each commit.
 
+For replication of published results, see **Replication notes (reference runs)** below,
+including `devnet_stress_tc.md` and `DevNet Stress Report_5.html`.
+
 ### `devnet_load_plot.py` — Load vs system metrics
 
 * Produces a 4-panel stacked plot:
@@ -106,6 +109,9 @@ This launches an interactive CLI that:
 ```bash
     ./devnet-sld/stress_out/load_vs_metrics.png
 ```
+
+This plot is generated from the consolidated workbook `devnet_plots.xlsx`
+assembled as described in **Replication notes (reference runs)**.
 
 ### `devnet_lmp_plot.py` — MC table + LMP heatmap
 
@@ -127,6 +133,9 @@ This launches an interactive CLI that:
   ./devnet-sld/stress_out/heatmap_lmp_spread.png
 ```
 
+This plot consumes LMP spread test cases extracted from the reference stress report
+and compiled into `devnet_plots.xlsx` (see **Replication notes (reference runs)**).
+
 ### `devnet_line_plot.py` — Line deration vs system metrics
 
 * Produces a 4-panel stacked plot against **transmission line deration (k_line)**:
@@ -147,6 +156,9 @@ This launches an interactive CLI that:
   ./devnet-sld/stress_out/line_vs_metrics.png
 ```
 
+Line-deration results are sourced from manually extracted reference cases and compiled
+into `devnet_plots.xlsx` as documented in **Replication notes (reference runs)**.
+
 ---
 
 ## Visualization & reporting
@@ -162,6 +174,44 @@ After running stress cases:
 
 > Note: Plot scripts expect `devnet_plots.xlsx` to exist.
 > If missing, run **devnet_stress.py** first.
+
+---
+
+## Replication notes (reference runs)
+
+This repository includes **reference artifacts** to support replication of published
+DevNet stress results without requiring an identical interactive replay.
+
+### Reference stress cases and reports
+
+- **Test case definitions**
+  - See: `denvnet-stress-vectors/devnet_stress_tc.md`
+  - Documents the exact set of stress scenarios executed (load, LMP, and line-deration cases).
+
+- **Reference stress report**
+  - See: `denvnet-stress-vectors/DevNet Stress Report_5.html`
+  - Snapshot of `index.html` corresponding to a full execution of
+    `devnet_stress_tc.md`.
+
+### Manual extraction workflow (used for plotting)
+
+The composite plotting scripts (`devnet_*_plot.py`) consume a consolidated workbook
+`devnet_plots.xlsx`, which is constructed as follows:
+
+1. From **DevNet Stress Report_5.html**, manually extract:
+   - Load stress cases → `devnet_load_tc.xlsx`
+   - LMP spread cases → `devnet_lmp_tc.xlsx`
+   - Line deration cases → `devnet_line_tc.xlsx`
+
+2. Place the extracted files in: `devnnet-stress-vectors/`
+
+3. Manually compile the extracted tables into a single workbook: `devnet_plots.xlsx` with each table placed under the expected sheet names.
+
+4. A **reference copy** of `devnet_plots.xlsx` corresponding to
+**DevNet Stress Report_5.html** is provided in: `devnnet-stress-vectors/`
+
+This approach ensures deterministic reproduction of plots while keeping the
+interactive `devnet_stress.py` workflow flexible and research-oriented.
 
 ---
 
@@ -214,8 +264,13 @@ The `pypsa-zn` workflow has been **developed and tested** in the following envir
 ### Tested environment
 
 - **Operating system**
-  - Windows 11 Pro (x64)
-  - Ubuntu 22.04 LTS (x86_64)
+  - Windows 11 Pro (x64)  
+    - Primary development and test environment.
+  - Ubuntu 22.04 LTS (x86_64)  
+    - Preliminary validation only.  
+    - Full replication runs pending.  
+    - Replication steps may differ from Windows due to native Linux server graphics
+      support limitations (headless environments).
 
 - **Python**
   - Python **3.10.x**
