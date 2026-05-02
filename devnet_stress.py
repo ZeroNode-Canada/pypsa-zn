@@ -1,18 +1,114 @@
 #!/usr/bin/env python3
-"""
-devnet_stress.py
 
-Congestion/LMP stress harness for DevNet:
-- Stress knobs: bus load multiplier, corridor capacity reducer, bus gen marginal cost
-- Optional datacenter overlay modes (grid-only, partial BYOG, off-grid)
-- Outputs: objective, LMPs, line loadings, binding indicators
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright 2025 ZeroNode
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Usage examples:
-  python devnet_stress.py --net ./devnet-sld --scenario baseline
-  python devnet_stress.py --net ./devnet-sld --scenario sweep_line --line L1 --kmin 1.0 --kmax 0.2 --kstep -0.1
-"""
+# devnet_stress.py
+# 
+# Congestion/LMP stress harness for DevNet:
+# - Stress knobs: bus load multiplier, corridor capacity reducer, bus gen marginal cost
+# - Optional datacenter overlay modes (grid-only, partial BYOG, off-grid)
+# - Outputs: objective, LMPs, line loadings, binding indicators
+# 
+# Usage examples:
+#   python devnet_stress.py --net ./devnet-sld --scenario baseline
+#   python devnet_stress.py --net ./devnet-sld --scenario sweep_line --line L1 --kmin 1.0 --kmax 0.2 --kstep -0.1
 
 # Run: devnet_stress.py
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# Datacenter BYOG Modeling — ECON MODE + CES Interpretation
+# ------------------------------------------------------------------------------
+# BYOG ECON MODE (target state)
+# - Datacenter (DC) modeled as:
+#     - Fixed load (p_set)
+#     - Onsite generation (BYOG) with marginal cost (byog_mc)
+# - No artificial split (dc_frac removed in ECON MODE)
+# - OPF determines dispatch based on cost:
+#     byog_mc < grid_mc → BYOG dispatches (self-supply first, possible export if surplus)
+#     byog_mc > grid_mc → Grid supplies DC load, BYOG idle
+#
+# Key physical constraint:
+# - Export / grid participation requires:
+#     available BYOG (and storage) > instantaneous DC load
+#
+# ------------------------------------------------------------------------------
+# CES Interpretation (ρ)
+# ------------------------------------------------------------------------------
+# ρ ≈ 0  (Low substitutability)
+# - DC operates in "corner solution" mode:
+#     - Either self-supplies (BYOG) OR draws from grid
+# - BYOG primarily offsets local load (BTM)
+# - No meaningful participation in grid dispatch
+# - Condition (practical):
+#     byog_mc > grid_mc OR no physical surplus (p_byog ≤ p_set)
+#
+# ρ ≈ 1  (Moderate substitutability)
+# - BYOG can participate in grid dispatch when economical
+# - DC self-supplies AND may export surplus
+# - Can reduce congestion and LMP spread
+# - Condition:
+#     byog_mc < grid_mc AND physical surplus exists (p_byog > p_set)
+#
+# ρ → ∞  (High substitutability / competition)
+# - BYOG behaves like grid-scale generation at the node
+# - Competes directly with grid supply
+# - Can materially set marginal price (LMP) and alter system dispatch
+# - Condition:
+#     byog_mc < grid_mc AND BYOG capacity built beyond DC needs (system-scale)
+#
+# ------------------------------------------------------------------------------
+# Modeling Notes
+# ------------------------------------------------------------------------------
+# - Current dc_frac formulation is an analytical control (non-economic split)
+# - ECON MODE replaces dc_frac with cost-based dispatch behavior
+# - LMP impact occurs only if:
+#     - BYOG displaces marginal generation OR
+#     - BYOG reduces binding congestion
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# Deprecation Note — dc_frac (Analytical Split)
+# ------------------------------------------------------------------------------
+# The dc_frac construct was introduced as an analytical knob to split BYOG into:
+#     (1 - dc_frac) → BTM self-consumption
+#     dc_frac       → grid-dispatchable supply
+#
+# However, this does NOT reflect real economic dispatch behavior:
+# - It forces participation rather than letting OPF decide based on cost
+# - It can double-count load under stress (k_load applied before netting)
+# - It breaks consistency with CES-based interpretation of substitutability
+#
+# In real systems:
+# - Datacenter chooses supply based on marginal cost
+# - Grid sees NET load after BTM dispatch
+# - No artificial split exists
+#
+# Therefore:
+# - dc_frac should be REMOVED (or retained only for controlled experiments)
+# - Replaced by BYOG ECON MODE:
+#     → Full load + BYOG generator
+#     → Dispatch determined purely by byog_mc vs grid_mc
+#
+# This aligns with:
+# - Real-world behavior
+# - CES interpretation (ρ regimes)
+# - Correct LMP and congestion response modeling
+# ------------------------------------------------------------------------------
 
 import os
 import io
@@ -129,55 +225,31 @@ def apply_gen_marginal_cost_by_bus(n: pypsa.Network, mc_bus: dict[str, float], m
         else:
             n.generators.loc[gens, "marginal_cost"] = float(v)
 
-def add_datacenter_site(
-    n: pypsa.Network,
-    site_name: str,
-    grid_bus: str,
-    p_dc_mw: float,
-    byog_frac: float = 0.0,
-    byog_mc: float = 80.0,
-    byog_p_nom: float | None = None,
-) -> str:
-    """
-    Behind-the-meter import-only site:
-    - grid_bus -> dc_bus directed link prevents export
-    - dc load on dc_bus
-    - optional BYOG generator on dc_bus
-    """
-    dc_bus = f"{site_name}_bus"
-    link = f"{site_name}_import"
-    load = f"{site_name}_load"
-    gen = f"{site_name}_byog"
+# ------------------------------------------------------------------------------
+# resolve_dc_csv_values()
+# Extracts DC defaults from loaded devnet (loads.csv)
+# ------------------------------------------------------------------------------
+def resolve_dc_csv_values(devnet):
+    dc = {"byog_mc": None, "p_set": None, "p_nom": None}
 
-    if dc_bus not in n.buses.index:
-        n.add("Bus", dc_bus)
+    if "Load_DC_PJM_NE" in devnet.loads.index:
+        try:
+            dc["p_set"] = float(devnet.loads.at["Load_DC_PJM_NE", "p_set"])
+            dc["p_nom"] = float(devnet.loads.at["Load_DC_PJM_NE", "byog_p_nom"])
+            dc["byog_mc"] = float(devnet.loads.at["Load_DC_PJM_NE", "byog_mc"])
+        except Exception:
+            pass
 
-    if link not in n.links.index:
-        n.add("Link", link, bus0=grid_bus, bus1=dc_bus, p_nom=1e9, efficiency=1.0)
+    return dc
 
-    if load not in n.loads.index:
-        n.add("Load", load, bus=dc_bus, p_set=p_dc_mw)
-    else:
-        n.loads.loc[load, "bus"] = dc_bus
-        n.loads_t.p_set.loc[:, load] = p_dc_mw
-
-    if byog_frac > 0:
-        p_byog = float(p_dc_mw) * float(byog_frac)
-        if gen not in n.generators.index:
-            n.add(
-                "Generator",
-                gen,
-                bus=dc_bus,
-                p_nom=(byog_p_nom if byog_p_nom is not None else p_byog),
-                marginal_cost=float(byog_mc),
-            )
-        else:
-            n.generators.loc[gen, "bus"] = dc_bus
-            n.generators.loc[gen, "marginal_cost"] = float(byog_mc)
-            n.generators.loc[gen, "p_nom"] = (byog_p_nom if byog_p_nom is not None else p_byog)
-
-    return dc_bus
-
+# ------------------------------------------------------------------------------
+# collect_results()
+# Extracts OPF outputs for a single snapshot:
+# - objective value
+# - nodal LMPs
+# - line loading (per-unit)
+# Standardizes results for reporting and downstream analysis
+# ------------------------------------------------------------------------------
 def collect_results(n: pypsa.Network) -> dict:
     """
     Returns snapshot-0 results (DevNet is usually single snapshot).
@@ -202,6 +274,13 @@ def collect_results(n: pypsa.Network) -> dict:
 
     return out
 
+# ------------------------------------------------------------------------------
+# write_outputs()
+# Writes simulation outputs to disk:
+# - JSON summary
+# - CSVs for LMP, line loading, and objective
+# Ensures consistent artifact structure for dashboards and analysis
+# ------------------------------------------------------------------------------
 def write_outputs(outdir: Path, tag: str, results: dict) -> None:
     outdir.mkdir(parents=True, exist_ok=True)
 
@@ -216,11 +295,38 @@ def write_outputs(outdir: Path, tag: str, results: dict) -> None:
 
     pd.Series({"objective": results.get("objective", np.nan)}).to_csv(outdir / f"{tag}_objective.csv")
 
+# ------------------------------------------------------------------------------
+# parse_json_dict()
+# Utility to safely parse JSON string inputs from CLI/menu into Python dicts
+# Used for k_load, k_line, mc_bus configuration inputs
+# ------------------------------------------------------------------------------
 def parse_json_dict(s: str) -> dict:
     if not s:
         return {}
     return json.loads(s)
 
+# ------------------------------------------------------------------------------
+# resolve_byog_mc()
+# Determines effective BYOG marginal cost for dispatch:
+# - Uses CLI override if provided (--byog_mc)
+# - Falls back to loads.csv (default model input)
+# Centralizes BYOG cost logic for consistency across runs
+# ------------------------------------------------------------------------------
+def resolve_byog_mc(n, args):
+    if DEVNET_NAME != "devnetDC-sld":
+        return None
+    mc = float(n.loads.at["Load_DC_PJM_NE", "byog_mc"])
+    return float(args.byog_mc) if getattr(args, "byog_mc", None) is not None else mc
+
+# ------------------------------------------------------------------------------
+# run_single()
+# Executes a single OPF scenario:
+# - Applies stress inputs (load, line, marginal cost)
+# - Models DC as load + BYOG generator (ECON MODE)
+# - Solves OPF and records outputs
+# Core execution path for scenario-based analysis
+# See BYOG ECON MODE + CES Interpretation (top of file)
+# ------------------------------------------------------------------------------
 def run_single(n0: pypsa.Network, args: argparse.Namespace, tag: str) -> dict:
     n = copy.deepcopy(n0)
 
@@ -228,9 +334,27 @@ def run_single(n0: pypsa.Network, args: argparse.Namespace, tag: str) -> dict:
     apply_corridor_reducers(n, parse_json_dict(args.k_line))
     apply_gen_marginal_cost_by_bus(n, parse_json_dict(args.mc_bus), mode=args.mc_mode)
 
-    if args.dc_site:
-        dc = json.loads(args.dc_site)
-        add_datacenter_site(n, **dc)
+    if DEVNET_NAME == "devnetDC-sld" and "Load_DC_PJM_NE" in n.loads.index:
+        byog_p = float(n.loads.at["Load_DC_PJM_NE", "byog_p_nom"])
+        p_set  = float(n.loads.at["Load_DC_PJM_NE", "p_set"])
+
+        # runtime overrides
+        if getattr(args, "dc_p_nom", None) is not None:
+            byog_p = float(args.dc_p_nom)
+
+        if getattr(args, "dc_p_set", None) is not None:
+            p_set = float(args.dc_p_set)
+        mc = resolve_byog_mc(n, args)
+
+        # BYOG always available — OPF decides dispatch based on cost and system conditions
+        n.add(
+            "Generator",
+            "Gen_DC_PJM_NE",
+            bus="PJM_NE",
+            carrier="gas",
+            p_nom=byog_p,
+            marginal_cost=mc,
+        )
 
     ok, msg = solve_with_duals(n, solver=args.solver)
     if not ok:
@@ -253,6 +377,15 @@ def run_single(n0: pypsa.Network, args: argparse.Namespace, tag: str) -> dict:
     write_outputs(Path(args.outdir), tag, res)
     return res
 
+# ------------------------------------------------------------------------------
+# run_sweep_line()
+# Performs parameter sweep over line capacity:
+# - Iteratively modifies corridor limits
+# - Runs OPF for each step
+# - Captures objective, LMP spread, and congestion metrics
+# Used for asymptote and congestion sensitivity analysis
+# See BYOG ECON MODE + CES Interpretation (top of file)
+# ------------------------------------------------------------------------------
 def run_sweep_line(n0: pypsa.Network, args: argparse.Namespace, file_prefix: str = "") -> pd.DataFrame:
     """
     Sweep a single line capacity multiplier and record objective + LMP deltas.
@@ -276,9 +409,29 @@ def run_sweep_line(n0: pypsa.Network, args: argparse.Namespace, file_prefix: str
         apply_corridor_reducers(n, {line: float(k)})
         apply_gen_marginal_cost_by_bus(n, parse_json_dict(args.mc_bus), mode=args.mc_mode)
 
-        if args.dc_site:
-            dc = json.loads(args.dc_site)
-            add_datacenter_site(n, **dc)
+        if DEVNET_NAME == "devnetDC-sld" and "Load_DC_PJM_NE" in n.loads.index:
+            byog_p = float(n.loads.at["Load_DC_PJM_NE", "byog_p_nom"])
+            p_set  = float(n.loads.at["Load_DC_PJM_NE", "p_set"])
+            byog_p = float(n.loads.at["Load_DC_PJM_NE", "byog_p_nom"])
+            p_set  = float(n.loads.at["Load_DC_PJM_NE", "p_set"])
+
+            # runtime overrides
+            if getattr(args, "dc_p_nom", None) is not None:
+                byog_p = float(args.dc_p_nom)
+
+            if getattr(args, "dc_p_set", None) is not None:
+                p_set = float(args.dc_p_set)
+            mc = resolve_byog_mc(n, args)
+
+            # BYOG always available — OPF decides dispatch based on cost and system conditions
+            n.add(
+                "Generator",
+                "Gen_DC_PJM_NE",
+                bus="PJM_NE",
+                carrier="gas",
+                p_nom=byog_p,
+                marginal_cost=mc,
+            )
 
         ok, msg = solve_with_duals(n, solver=args.solver)
         if not ok:
@@ -321,6 +474,20 @@ def run_sweep_line(n0: pypsa.Network, args: argparse.Namespace, file_prefix: str
     df.to_csv(outdir / fname, index=False)
     return df
 
+# ------------------------------------------------------------------------------
+# Menu & Configuration Helpers
+# - build_argparser()
+# - build_args_catalog()
+# - capture_catalog_lines()
+# - print_two_columns()
+# - prompt_custom_*()
+# - configure_args_menu()
+# Handles user interaction:
+# - scenario selection
+# - parameter configuration
+# - custom overrides
+# Drives interactive research workflow
+# ------------------------------------------------------------------------------
 def build_argparser(devnet_bld_path: str) -> argparse.ArgumentParser:
     p = argparse.ArgumentParser()
     p.add_argument("--scenario", default="baseline", choices=["baseline", "single", "sweep_line"])
@@ -333,39 +500,27 @@ def build_argparser(devnet_bld_path: str) -> argparse.ArgumentParser:
     p.add_argument("--mc_bus", default="{}", help='JSON dict: {"BUS2": 50, "BUS5": 120}')
     p.add_argument("--mc_mode", default="set", choices=["set", "add"])
 
-    p.add_argument("--dc_site", default="", help='JSON dict for site overlay; see README in script header.')
+    p.add_argument(
+        "--byog_mc",
+        type=float,
+        default=None,
+        help="Override datacenter BYOG marginal cost (USD/MWh). Default=None uses loads.csv value",
+    )
 
     p.add_argument("--line", default="", help="Line name for sweep_line scenario.")
     p.add_argument("--kmin", type=float, default=1.0)
     p.add_argument("--kmax", type=float, default=0.2)
     p.add_argument("--kstep", type=float, default=-0.1)
+    p.add_argument("--dc_p_set", type=float, default=None, help="Override DC load (MW)")
+    p.add_argument("--dc_p_nom", type=float, default=None, help="Override DC BYOG capacity (MW)")    
     return p
-
-def _pick_from_menu(title: str, options: list[str], default_idx: int = 0) -> str:
-    """
-    Compact picker: does NOT print option values.
-    Assumes the catalog table above shows values.
-    """
-    opt_range = ",".join(str(i) for i in range(1, len(options) + 1))
-    prompt = f"{title}[{opt_range}] <Enter selection> (default={default_idx + 1}): "
-    s = input(prompt).strip()
-
-    if not s:
-        return options[default_idx]
-
-    try:
-        k = int(s)
-        if 1 <= k <= len(options):
-            return options[k - 1]
-    except Exception:
-        pass
-
-    print("Invalid selection; using default.")
-    return options[default_idx]
 
 def build_args_catalog(devnet: pypsa.Network) -> dict[str, list[str]]:
     bus0 = devnet.buses.index[0] if len(devnet.buses) else "BUS0"
     line0 = devnet.lines.index[0] if len(devnet.lines) else "LINE0"
+
+    # Extract DC defaults from loaded devnet (loads.csv) for contextual display in menu
+    dc_csv = resolve_dc_csv_values(devnet)
 
     return {
         "scenario": ["baseline", "single", "sweep_line"],
@@ -390,127 +545,16 @@ def build_args_catalog(devnet: pypsa.Network) -> dict[str, list[str]]:
             json.dumps({bus0: 100}),
             "__CUSTOM__",   # custom per-bus MC like k_line / k_load
         ],
-        "dc_site": [
-            "",
-            json.dumps({"site_name": "DC1", "grid_bus": bus0, "p_dc_mw": 2000.0, "byog_frac": 0.0, "byog_mc": 80.0}),
-            json.dumps({"site_name": "DC1", "grid_bus": bus0, "p_dc_mw": 2000.0, "byog_frac": 0.5, "byog_mc": 80.0}),
-        ],
         "line": (list(devnet.lines.index[:6]) if len(devnet.lines) else [""]) + ["<manual>"],
         "kmin": ["1.0", "0.9", "0.8"],
         "kmax": ["0.5", "0.4", "0.3", "0.2"],
         "kstep": ["-0.1", "-0.05", "-0.02"],
+
+        # Set BYOG and DC load presets based on CSV values for contextual relevance
+        "byog_mc": [f"CSV Preset = {dc_csv['byog_mc']}", 45.0, 50.0, 60.0, "__CUSTOM__"],
+        "dc_p_set": [f"CSV Preset = {dc_csv['p_set']}", 1000.0, 2000.0, "__CUSTOM__"],
+        "dc_p_nom": [f"CSV Preset = {dc_csv['p_nom']}", 1000.0, 2000.0, "__CUSTOM__"],
     }
-
-def devnet_base_params(devnet: pypsa.Network) -> dict:
-    """
-    Extract base network parameters for documentation:
-      - Buses_N
-      - base marginal cost (USD/MWh) from generator CSV
-      - base line s_nom (MW) from line CSV
-
-    Notes:
-      - Uses the loaded CSV network devnet = pypsa.Network(DEVNET_BLD_PATH)
-      - For marginal cost: returns a single representative value.
-        If multiple unique values exist, returns the minimum and flags it.
-      - For line s_nom: returns a single representative value.
-        If multiple unique values exist, returns the minimum and flags it.
-    """
-    buses_n = int(len(devnet.buses.index)) if hasattr(devnet, "buses") else 0
-
-    # Generator marginal cost(s)
-    if len(devnet.generators) and "marginal_cost" in devnet.generators.columns:
-        mc_vals = pd.to_numeric(devnet.generators["marginal_cost"], errors="coerce").dropna().values
-        mc_unique = np.unique(mc_vals) if mc_vals.size else np.array([])
-        if mc_unique.size == 0:
-            mc_repr = np.nan
-            mc_note = "mc: missing"
-        elif mc_unique.size == 1:
-            mc_repr = float(mc_unique[0])
-            mc_note = ""
-        else:
-            # If heterogeneous, pick min as “base” and note heterogeneity
-            mc_repr = float(np.nanmin(mc_unique))
-            mc_note = f"(multiple mc values; showing min of {mc_unique.size})"
-    else:
-        mc_repr = np.nan
-        mc_note = "mc: missing"
-
-    # Line s_nom(s)
-    if len(devnet.lines) and "s_nom" in devnet.lines.columns:
-        sn_vals = pd.to_numeric(devnet.lines["s_nom"], errors="coerce").dropna().values
-        sn_unique = np.unique(sn_vals) if sn_vals.size else np.array([])
-        if sn_unique.size == 0:
-            sn_repr = np.nan
-            sn_note = "s_nom: missing"
-        elif sn_unique.size == 1:
-            sn_repr = float(sn_unique[0])
-            sn_note = ""
-        else:
-            # If heterogeneous, pick min as representative and note heterogeneity
-            sn_repr = float(np.nanmin(sn_unique))
-            sn_note = f"(multiple s_nom values; showing min of {sn_unique.size})"
-    else:
-        sn_repr = np.nan
-        sn_note = "s_nom: missing"
-
-    return {
-        "buses_n": buses_n,
-        "mc_repr": mc_repr,
-        "mc_note": mc_note,
-        "s_nom_repr": sn_repr,
-        "s_nom_note": sn_note,
-    }
-
-def build_sanity_panel_lines(devnet: pypsa.Network) -> list[str]:
-    # Base parameters (for self-contained test case docs)
-    base = devnet_base_params(devnet)
-
-    # System-wide adequacy
-    total_gen = float(devnet.generators["p_nom"].sum()) if len(devnet.generators) else 0.0
-    total_load = float(devnet.loads["p_set"].sum()) if len(devnet.loads) else 0.0
-    adequate = "YES" if total_gen >= total_load else "NO"
-
-    lines = []
-    lines.append("")  # align with left header line
-
-    # Base DevNet params (before adequacy block)
-    lines.append("DevNet base params:")
-    lines.append(f"  Buses_N            = {base['buses_n']}")
-    if not np.isnan(base["mc_repr"]):
-        lines.append(f"  c_g (USD/MWh)      = {base['mc_repr']:.2f} {base['mc_note']}".rstrip())
-    else:
-        lines.append(f"  c_g (USD/MWh)      = (missing) {base['mc_note']}".rstrip())
-    if not np.isnan(base["s_nom_repr"]):
-        lines.append(f"  line s_nom (MW)    = {base['s_nom_repr']:.1f} {base['s_nom_note']}".rstrip())
-    else:
-        lines.append(f"  line s_nom (MW)    = (missing) {base['s_nom_note']}".rstrip())
-    lines.append("")
-
-    lines.append("System-wide adequacy check:")
-    lines.append(f"  Σ p_nom (generation) = {total_gen:,.1f} MW")
-    lines.append(f"  Σ p_set (load)       = {total_load:,.1f} MW")
-    lines.append(f"  Adequate?            = {adequate}")
-    lines.append("")
-    lines.append("Per-bus balance (local surplus/deficit):")
-    lines.append("  surplus = Σ p_nom(gen@bus) - Σ p_set(load@bus)")
-    lines.append("")
-
-    gen_by_bus = devnet.generators.groupby("bus")["p_nom"].sum() if len(devnet.generators) else None
-    load_by_bus = devnet.loads.groupby("bus")["p_set"].sum() if len(devnet.loads) else None
-
-    rows = []
-    for b in devnet.buses.index:
-        g = float(gen_by_bus.get(b, 0.0)) if gen_by_bus is not None else 0.0
-        l = float(load_by_bus.get(b, 0.0)) if load_by_bus is not None else 0.0
-        rows.append((b, g, l, g - l))
-
-    lines.append("              gen     load   surplus")
-    for b, g, l, s in sorted(rows, key=lambda x: x[3]):
-        status = "EXPORT" if s > 0 else ("BAL" if s == 0 else "IMPORT")
-        lines.append(f"  {b:8s}    {g:7.1f}  {l:7.1f}  {s:7.1f}  [{status}]")
-
-    return lines
-
 
 def capture_catalog_lines(catalog: dict[str, list[str]]) -> list[str]:
     """
@@ -534,7 +578,7 @@ def capture_catalog_lines(catalog: dict[str, list[str]]) -> list[str]:
     out.append("-" * len(header))
 
     for arg, opts in catalog.items():
-        if arg in ("k_load", "k_line", "dc_site"):
+        if arg in ("k_load", "k_line"):
             out.append(f"{arg:<{col1}} | {opts[0]}")
             for o in opts[1:]:
                 out.append(f"{'':<{col1}} | {o}")
@@ -654,6 +698,28 @@ def prompt_custom_mc_bus(devnet: pypsa.Network) -> dict[str, float]:
             print("    Invalid number. Skipped.")
     return out
 
+def _pick_from_menu(title: str, options: list[str], default_idx: int = 0) -> str:
+    """
+    Compact picker: does NOT print option values.
+    Assumes the catalog table above shows values.
+    """
+    opt_range = ",".join(str(i) for i in range(1, len(options) + 1))
+    prompt = f"{title}[{opt_range}] <Enter selection> (default={default_idx + 1}): "
+    s = input(prompt).strip()
+
+    if not s:
+        return options[default_idx]
+
+    try:
+        k = int(s)
+        if 1 <= k <= len(options):
+            return options[k - 1]
+    except Exception:
+        pass
+
+    print("Invalid selection; using default.")
+    return options[default_idx]
+
 def configure_args_menu(devnet: pypsa.Network, args: argparse.Namespace) -> argparse.Namespace:
     print("\nSelection arg configuration values:\n")
 
@@ -731,13 +797,39 @@ def configure_args_menu(devnet: pypsa.Network, args: argparse.Namespace) -> argp
     else:
         args.mc_bus = sel_mc
 
-    # --- dc_site ---
-    opts = catalog["dc_site"]
-    args.dc_site = _pick_from_menu(
-        "Datacenter site overlay (dc_site)",
+    # --- Datacenter BYOG marginal cost override ---
+    opts = catalog.get("byog_mc", ["CSV_PRESET"])  # fallback to just CSV_PRESET if not in catalog for some reason
+    choice = _pick_from_menu(
+        "Datacenter BYOG marginal cost override (CSV Preset = use loads.csv)",
         opts,
-        default_idx=opts.index(args.dc_site) if args.dc_site in opts else 0
+        default_idx=0
     )
+    if isinstance(choice, str) and choice.startswith("CSV Preset"):
+        args.byog_mc = None
+    elif choice == "__CUSTOM__":
+        args.byog_mc = float(input("Enter custom BYOG MC (USD/MWh): ").strip())
+    else:
+        args.byog_mc = float(choice)
+    
+    # --- DC load override ---
+    opts = catalog.get("dc_p_set", ["CSV Preset"])
+    choice = _pick_from_menu("Datacenter load override (MW)", opts, default_idx=0)
+    if isinstance(choice, str) and choice.startswith("CSV Preset"):
+        args.dc_p_set = None
+    elif choice == "__CUSTOM__":
+        args.dc_p_set = float(input("Enter DC load (MW): ").strip())
+    else:
+        args.dc_p_set = float(choice)
+
+    # --- DC BYOG capacity override ---
+    opts = catalog.get("dc_p_nom", ["CSV Preset"])
+    choice = _pick_from_menu("Datacenter BYOG capacity override (MW)", opts, default_idx=0)
+    if isinstance(choice, str) and choice.startswith("CSV Preset"):
+        args.dc_p_nom = None
+    elif choice == "__CUSTOM__":
+        args.dc_p_nom = float(input("Enter BYOG capacity (MW): ").strip())
+    else:
+        args.dc_p_nom = float(choice)
 
     # --- sweep_line specific fields ---
     if args.scenario == "sweep_line":
@@ -761,12 +853,40 @@ def configure_args_menu(devnet: pypsa.Network, args: argparse.Namespace) -> argp
         args.line = ""
         args.kmin, args.kmax, args.kstep = 1.0, 0.2, -0.1
 
+    # Ordered print of final configured args for confirmation before run
+    ordered_keys = [
+        "scenario",
+        "mc_mode",
+        "k_load",
+        "k_line",
+        "mc_bus",
+        "line",
+        "kmin",
+        "kmax",
+        "kstep",
+        "byog_mc",
+        "dc_p_set",
+        "dc_p_nom",
+    ]
     print("\nASR-DBG::Configured args (menu):")
-    for k, v in vars(args).items():
-        print(f"\t\t{k:12s} = {v}")
+    for k in ordered_keys:
+        if hasattr(args, k):
+            print(f"\t\t{k:12s} = {getattr(args, k)}")
+
     input("\nARGS OK? Press Enter to run...\n")
     return args
 
+# ------------------------------------------------------------------------------
+# Dashboard Helpers
+# - _dashboard_from_single()
+# - _dashboard_from_sweep()
+# - dashboard_text()
+# Aggregate and format results into compact summaries:
+# - objective
+# - LMP spread
+# - congestion indicators
+# Used for console output and HTML reporting
+# ------------------------------------------------------------------------------
 def _dashboard_from_single(res: dict) -> dict:
     # objective
     obj = float(res.get("objective", np.nan))
@@ -843,10 +963,23 @@ def dashboard_text(args: argparse.Namespace, mode: str, dash: dict) -> str:
     lines.append(f"ASR-DASH::{mode}::{args.scenario}")
     lines.append(SUBSECTION_SEPARATOR.rstrip("\n"))
 
-    # args summary (tight single line)
+    # Extract DC defaults from loaded devnet (loads.csv) for contextual display in menu
+    dc_csv = resolve_dc_csv_values(devnet)
+
+    # args summary (include key config values for context)
+    dc_mc = getattr(args, "byog_mc", None)
+    dc_p_set = getattr(args, "dc_p_set", None)
+    dc_p_nom = getattr(args, "dc_p_nom", None)
+
+    # DC-related fields:: if:arg is None::CSV preset value; Else::show the override value.
+    dc_p_set_str = f"CSV Preset::{dc_csv['p_set']}" if dc_p_set is None else dc_p_set
+    dc_p_nom_str = f"CSV Preset::{dc_csv['p_nom']}" if dc_p_nom is None else dc_p_nom
+    dc_mc_str    = f"CSV Preset::{dc_csv['byog_mc']}" if dc_mc is None else dc_mc
+
     lines.append(
         f"args: scenario={args.scenario}  mc_mode={args.mc_mode}  line={args.line or '-'}  "
-        f"k_load={args.k_load}  k_line={args.k_line}  mc_bus={args.mc_bus}  dc_site={'Y' if args.dc_site else 'N'}"
+        f"k_load={args.k_load}  k_line={args.k_line}  mc_bus={args.mc_bus}  "
+        f"byog_mc={dc_mc_str}  dc_p_set={dc_p_set_str}  dc_p_nom={dc_p_nom_str}"
     )
 
     if args.scenario in ("baseline", "single"):
@@ -870,7 +1003,175 @@ def dashboard_text(args: argparse.Namespace, mode: str, dash: dict) -> str:
     lines.append(SECTION_SEPARATOR.rstrip("\n"))
     return "\n".join(lines) + "\n"
 
+# ------------------------------------------------------------------------------
+# DevNet Sanity & Base Parameter Helpers
+# - devnet_base_params()
+# - build_sanity_panel_lines()
+#
+# Extracts and presents core network characteristics for validation:
+# - Base parameters (bus count, generator marginal cost, line capacity)
+# - Datacenter BYOG marginal cost (from loads.csv if present)
+# - System-wide adequacy (generation vs load)
+# - Per-bus supply/demand balance (surplus / deficit)
+#
+# Provides a quick, structured snapshot of the network state to:
+# - validate input data integrity
+# - understand baseline system conditions
+# - contextualize stress test results
+# ------------------------------------------------------------------------------
+def devnet_base_params(devnet: pypsa.Network) -> dict:
+    """
+    Extract base network parameters for documentation:
+      - Buses_N
+      - base marginal cost (USD/MWh) from generator CSV
+      - base line s_nom (MW) from line CSV
 
+    Notes:
+      - Uses the loaded CSV network devnet = pypsa.Network(DEVNET_BLD_PATH)
+      - For marginal cost: returns a single representative value.
+        If multiple unique values exist, returns the minimum and flags it.
+      - For line s_nom: returns a single representative value.
+        If multiple unique values exist, returns the minimum and flags it.
+    """
+    buses_n = int(len(devnet.buses.index)) if hasattr(devnet, "buses") else 0
+
+    # Generator marginal cost(s)
+    if len(devnet.generators) and "marginal_cost" in devnet.generators.columns:
+        mc_vals = pd.to_numeric(devnet.generators["marginal_cost"], errors="coerce").dropna().values
+        mc_unique = np.unique(mc_vals) if mc_vals.size else np.array([])
+        if mc_unique.size == 0:
+            mc_repr = np.nan
+            mc_note = "mc: missing"
+        elif mc_unique.size == 1:
+            mc_repr = float(mc_unique[0])
+            mc_note = ""
+        else:
+            # If heterogeneous, pick min as “base” and note heterogeneity
+            mc_repr = float(np.nanmin(mc_unique))
+            mc_note = f"(multiple mc values; showing min of {mc_unique.size})"
+    else:
+        mc_repr = np.nan
+        mc_note = "mc: missing"
+
+    # Line s_nom(s)
+    if len(devnet.lines) and "s_nom" in devnet.lines.columns:
+        sn_vals = pd.to_numeric(devnet.lines["s_nom"], errors="coerce").dropna().values
+        sn_unique = np.unique(sn_vals) if sn_vals.size else np.array([])
+        if sn_unique.size == 0:
+            sn_repr = np.nan
+            sn_note = "s_nom: missing"
+        elif sn_unique.size == 1:
+            sn_repr = float(sn_unique[0])
+            sn_note = ""
+        else:
+            # If heterogeneous, pick min as representative and note heterogeneity
+            sn_repr = float(np.nanmin(sn_unique))
+            sn_note = f"(multiple s_nom values; showing min of {sn_unique.size})"
+    else:
+        sn_repr = np.nan
+        sn_note = "s_nom: missing"
+
+    return {
+        "buses_n": buses_n,
+        "mc_repr": mc_repr,
+        "mc_note": mc_note,
+        "s_nom_repr": sn_repr,
+        "s_nom_note": sn_note,
+    }
+
+def build_sanity_panel_lines(devnet: pypsa.Network) -> list[str]:
+    # Base parameters (for self-contained test case docs)
+    base = devnet_base_params(devnet)
+
+    # System-wide adequacy
+    total_gen = float(devnet.generators["p_nom"].sum()) if len(devnet.generators) else 0.0
+    total_load = float(devnet.loads["p_set"].sum()) if len(devnet.loads) else 0.0
+    adequate = "YES" if total_gen >= total_load else "NO"
+
+    lines = []
+    lines.append("")  # align with left header line
+
+    # Base DevNet params (before adequacy block)
+    lines.append("DevNet base params:")
+    lines.append(f"  Buses_N            = {base['buses_n']}")
+
+    # --- Datacenter BYOG MC (from loads.csv if present) ---
+    dc_mc = None
+    if "byog_mc" in devnet.loads.columns:
+        dc_rows = devnet.loads[devnet.loads.index.str.contains("DC", case=False, na=False)]
+        if not dc_rows.empty:
+            try:
+                dc_mc = float(dc_rows["byog_mc"].iloc[0])
+            except Exception:
+                dc_mc = None
+
+    # --- Datacenter p_set / p_nom ---
+    dc_p_set = None
+    dc_p_nom = None
+
+    if "Load_DC_PJM_NE" in devnet.loads.index:
+        try:
+            dc_p_set = float(devnet.loads.at["Load_DC_PJM_NE", "p_set"])
+            dc_p_nom = float(devnet.loads.at["Load_DC_PJM_NE", "byog_p_nom"])
+        except Exception:
+            pass
+
+    if dc_p_set is not None and dc_p_nom is not None:
+        lines.append(f"  dc_p_set (MW)        = {dc_p_set:.1f}")
+        lines.append(f"  dc_p_nom (MW)        = {dc_p_nom:.1f}")
+    else:
+        lines.append(f"  dc_p_set / p_nom     = n/a")
+
+    if dc_mc is not None:
+        lines.append(f"  dc_byog_mc (USD/MWh) = {dc_mc:.2f} [loads.csv]")
+    else:
+        lines.append(f"  dc_byog_mc (USD/MWh) = n/a")
+
+    if not np.isnan(base["mc_repr"]):
+        lines.append(f"  c_g (USD/MWh)      = {base['mc_repr']:.2f} {base['mc_note']}".rstrip())
+    else:
+        lines.append(f"  c_g (USD/MWh)      = (missing) {base['mc_note']}".rstrip())
+    if not np.isnan(base["s_nom_repr"]):
+        lines.append(f"  line s_nom (MW)    = {base['s_nom_repr']:.1f} {base['s_nom_note']}".rstrip())
+    else:
+        lines.append(f"  line s_nom (MW)    = (missing) {base['s_nom_note']}".rstrip())
+    lines.append("")
+
+    lines.append("System-wide adequacy check:")
+    lines.append(f"  Σ p_nom (generation) = {total_gen:,.1f} MW")
+    lines.append(f"  Σ p_set (load)       = {total_load:,.1f} MW")
+    lines.append(f"  Adequate?            = {adequate}")
+    lines.append("")
+    lines.append("Per-bus balance (local surplus/deficit):")
+    lines.append("  surplus = Σ p_nom(gen@bus) - Σ p_set(load@bus)")
+    lines.append("")
+
+    gen_by_bus = devnet.generators.groupby("bus")["p_nom"].sum() if len(devnet.generators) else None
+    load_by_bus = devnet.loads.groupby("bus")["p_set"].sum() if len(devnet.loads) else None
+
+    rows = []
+    for b in devnet.buses.index:
+        g = float(gen_by_bus.get(b, 0.0)) if gen_by_bus is not None else 0.0
+        l = float(load_by_bus.get(b, 0.0)) if load_by_bus is not None else 0.0
+        rows.append((b, g, l, g - l))
+
+    lines.append("              gen     load   surplus")
+    for b, g, l, s in sorted(rows, key=lambda x: x[3]):
+        status = "EXPORT" if s > 0 else ("BAL" if s == 0 else "IMPORT")
+        lines.append(f"  {b:8s}    {g:7.1f}  {l:7.1f}  {s:7.1f}  [{status}]")
+
+    return lines
+
+# ------------------------------------------------------------------------------
+# HTML Reporting Helpers
+# - write_commit_dashboard_md()
+# - update_index_html()
+# Generates HTML dashboard:
+# - commit summaries
+# - embedded results
+# - links to CSV artifacts
+# Provides persistent visual report of stress runs
+# ------------------------------------------------------------------------------
 def write_commit_dashboard_md(outdir: str, commit_id: str, text: str) -> str:
     """
     Writes cN_dashboard.md and returns the filepath.
@@ -881,8 +1182,7 @@ def write_commit_dashboard_md(outdir: str, commit_id: str, text: str) -> str:
     md_path.write_text(text, encoding="utf-8")
     return str(md_path)
 
-
-def update_index_html(outdir: str) -> str:
+def update_index_html(outdir: str, devnet: pypsa.Network) -> str:
     """
     Regenerates stress_out/index.html by scanning commit artifacts.
     Lists commits, embeds dashboard text (preformatted), and links CSV files.
@@ -1031,7 +1331,11 @@ def update_index_html(outdir: str) -> str:
 
     # RIGHT (always)
     html.append("<div class='right-col'>")
-    html.append("<img class='side-img' src='../plots/devnet-sld.png' alt='DevNet SLD'>")
+    if DEVNET_NAME == "devnetDC-sld":
+        html.append("<img class='side-img' src='../plots/devnetDC-sld.png' alt='DevNetDC SLD'>")
+    else:
+        html.append("<img class='side-img' src='../plots/devnet.png' alt='DevNet SLD'>")
+
     right_lines = build_sanity_panel_lines(devnet)
     right_text = "\n".join(right_lines).strip("\n")
     html.append("<pre class='side-pre'>")
@@ -1153,6 +1457,18 @@ def _next_commit_id(outdir: str) -> str:
 
     return f"c{n_next}"
 
+# ------------------------------------------------------------------------------
+# Main Execution & Research Loop
+# - researcher_loop()
+# - main()
+# Orchestrates workflow:
+# - load network
+# - configure scenarios
+# - preview runs
+# - commit results
+# - update dashboards
+# Entry point for DevNet stress testing framework
+# ------------------------------------------------------------------------------
 def researcher_loop(devnet: pypsa.Network, args: argparse.Namespace, catalog: dict[str, list[str]]) -> None:
 
     """
@@ -1202,7 +1518,7 @@ def researcher_loop(devnet: pypsa.Network, args: argparse.Namespace, catalog: di
             print(f"Commit id:\t{commit_id}\n")
             dash_txt = dashboard_text(args, f"COMMIT::{commit_id}", dash)
             write_commit_dashboard_md(args.outdir, commit_id, dash_txt)
-            index_path = update_index_html(args.outdir)
+            index_path = update_index_html(args.outdir, devnet)
             print(f"HTML report updated @:\n\t{index_path}\n")
             os.system("cls" if os.name == "nt" else "clear")
             catalog = build_args_catalog(devnet)
@@ -1230,7 +1546,7 @@ def main():
     print_two_columns(left, right, left_width=95, gap=4)
 
     # Generate initial HTML report (even before first commit)
-    update_index_html(args.outdir)
+    update_index_html(args.outdir, devnet)
 
     input("Press Enter to start arg configuration...\n")
 
@@ -1238,12 +1554,19 @@ def main():
     researcher_loop(devnet, args, catalog)
 
 # ----------------------------------------------------------------------
-#   Prompt user for DevNet name
+#   Select DevNet build (baseline vs datacenter BYOG)
 # ----------------------------------------------------------------------
-default_devnet = "devnet-sld"
+print("Select DevNet build:")
+print("  1) devnet-sld (baseline)")
+print("  2) devnetDC-sld (with Datacenter BYOG)")
 
-user_input = input(f"Enter DevNet name [{default_devnet}]: ").strip()
-DEVNET_NAME = user_input if user_input else default_devnet
+choice = input("Enter choice [1]: ").strip()
+
+if choice == "2":
+    DEVNET_NAME = "devnetDC-sld"
+else:
+    DEVNET_NAME = "devnet-sld"
+
 print(f"ASR-DBG::Using DEVNET_NAME::\n\t{DEVNET_NAME}\n")
 
 # ------------------------------------------------------------------------------

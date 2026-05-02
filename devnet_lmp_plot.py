@@ -1,28 +1,45 @@
-"""
-devnet_lmp_plot.py
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright 2025 ZeroNode
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Objective
-- Visualize DevNet Monte Carlo (mc) bus perturbation cases against LMP spread, with
-  aligned congestion/feasibility context.
+# devnet_lmp_plot.py
+# 
+# Objective
+# - Visualize DevNet Monte Carlo (mc) bus perturbation cases against LMP spread, with
+#   aligned congestion/feasibility context.
+# 
+# What it does
+# - Reads a DevNet MC/LMP worksheet from devnet_plots.xlsx and produces a figure with:
+#   - Left: MC table (bus mc values per case) with highlight rules.
+#   - Middle: heatmap where color encodes LMP spread (replicated across bus columns).
+#   - Right: metrics panel (max_loading_pu heatbar, near_bind_ct heatbar, objective sparkline,
+#     and top congested lines text filtered by loading >= 0.95).
+# 
+# Inputs
+# - Excel file: <script_dir>/devnet-stress-vectors/devnet_plots.xlsx
+# - Sheet: DevNetGen_mc<>LMP
+# - Header row index: HDR_ROW (default 4)
+# - Expected fields: bus mc columns (WECC_NW, WECC_SW, SPP_MISO, PJM_NE, SERC_SE, ERCOT),
+#   lmp_spread, objective, max_loading_pu, near_bind_ct, top line labels + loading columns.
+# 
+# Outputs
+# - PNG file: <script_dir>/devnet-stress-vectors/heatmap_lmp_spread.png
+# - Console: prints output path; raises KeyError if required columns are missing.
 
-What it does
-- Reads a DevNet MC/LMP worksheet from devnet_plots.xlsx and produces a figure with:
-  - Left: MC table (bus mc values per case) with highlight rules.
-  - Middle: heatmap where color encodes LMP spread (replicated across bus columns).
-  - Right: metrics panel (max_loading_pu heatbar, near_bind_ct heatbar, objective sparkline,
-    and top congested lines text filtered by loading >= 0.95).
-
-Inputs
-- Excel file: <script_dir>/denvnet-stress-vectors/devnet_plots.xlsx
-- Sheet: DevNetGen_mc<>LMP
-- Header row index: HDR_ROW (default 4)
-- Expected fields: bus mc columns (WECC_NW, WECC_SW, SPP_MISO, PJM_NE, SERC_SE, ERCOT),
-  lmp_spread, objective, max_loading_pu, near_bind_ct, top line labels + loading columns.
-
-Outputs
-- PNG file: <script_dir>/denvnet-stress-vectors/heatmap_lmp_spread.png
-- Console: prints output path; raises KeyError if required columns are missing.
-"""
+# Run: devnet_lmp_plot.py
+# ------------------------------------------------------------------------------
 
 import os
 import shutil
@@ -38,8 +55,9 @@ from matplotlib.ticker import FuncFormatter
 # ------------------------------------------------------------------------------
 #   Configuration: paths, filenames, worksheet selection
 # ------------------------------------------------------------------------------
+DEBUG = False    # Set: True == DEBUG ON; False == DEBUG OFF
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-TEST_VECTORS_DIR_NAME = "denvnet-stress-vectors"
+TEST_VECTORS_DIR_NAME = "devnet-stress-vectors"
 
 DEVNET_XLSX_NAME = "devnet_plots.xlsx"
 SHEET_NAME = "DevNetGen_mc<>LMP"
@@ -47,7 +65,7 @@ DEVNET_XLSX_PATH = os.path.join(SCRIPT_DIR, TEST_VECTORS_DIR_NAME)
 DEVNET_XLSX = os.path.join(DEVNET_XLSX_PATH, DEVNET_XLSX_NAME)
 
 HEAT_MAP_PNG_NAME = "heatmap_lmp_spread.png"
-HEAT_MAP_PNG_PATH = os.path.join(SCRIPT_DIR, "denvnet-stress-vectors")
+HEAT_MAP_PNG_PATH = os.path.join(SCRIPT_DIR, "devnet-stress-vectors")
 HEAT_MAP_PNG = os.path.join(HEAT_MAP_PNG_PATH, HEAT_MAP_PNG_NAME)
 
 # ------------------------------------------------------------------------------
@@ -121,16 +139,29 @@ nrows = len(heat.index)
 
 fig = plt.figure(figsize=(20, max(4, 0.55 * nrows)))
 gs = gridspec.GridSpec(
-    nrows=1, ncols=3,
-    width_ratios=[2.2, 3.0, 1.8],  # table | heatmap | metrics panel
-    wspace=0.08
+    nrows=1, ncols=4,
+    width_ratios=[2.2, 3.0, 0.25, 1.8],  # table | heatmap | colorbar | metrics
+    wspace=0.18
 )
 
-ax_tbl = fig.add_subplot(gs[0, 0])
-ax_hm  = fig.add_subplot(gs[0, 1])
-ax_met = fig.add_subplot(gs[0, 2])  # metrics panel (we'll subdivide inside)
+ax_tbl = fig.add_subplot(gs[0, 0])  # table (far left)
+ax_hm  = fig.add_subplot(gs[0, 1])  # heatmap (center)
+ax_cb  = fig.add_subplot(gs[0, 2])  # colorbar (narrow, between heatmap and metrics)
+pos = ax_cb.get_position()
+# nudge color bar left to be closer to heatmap
+ax_cb.set_position([pos.x0 - 0.015, pos.y0, pos.width, pos.height])  
+ax_met = fig.add_subplot(gs[0, 3])  # metrics panel (far right)
+ax_met.set_anchor('W')
 
-# --- Heatmap (right) with discrete colorbar ---
+if DEBUG:
+    print("tbl position:", ax_tbl.get_position())
+    print("hm position:", ax_hm.get_position())
+    print("cb position:", ax_cb.get_position())
+    print("met position:", ax_met.get_position())
+
+# --------------------------------------
+# LMP spread- Test case heatmap (center)
+# --------------------------------------
 vals = np.array(sorted(set(float(x) for x in z.values)))  # unique LMP spreads
 
 if len(vals) == 1:
@@ -148,12 +179,36 @@ ax_hm.set_xticklabels(bus_cols, rotation=45, ha="right")
 # Use simple row numbers on heatmap y-axis (table carries the MC detail)
 ax_hm.set_yticks(range(nrows))
 ax_hm.set_yticklabels([str(i+1) for i in range(nrows)])
-
-cbar = fig.colorbar(im, ax=ax_hm, ticks=vals)
-cbar.set_label("LMP spread")
-cbar.ax.set_yticklabels([str(int(v)) if float(v).is_integer() else str(v) for v in vals])
-
 ax_hm.set_title("LMP spread vs test case (replicated across buses)")
+
+# -------------------
+# LMP spread colorbar
+# -------------------
+# Custom 1-column LMP-spread legend aligned row-for-row with heatmap cases
+cb_vals = np.array(z.values).reshape(-1, 1)
+ax_cb.imshow(cb_vals, aspect="auto", norm=norm)
+ax_cb.set_aspect('auto')
+ax_cb.set_xlim(-0.5, 0.5)
+ax_cb.set_ylim(nrows - 0.5, -0.5)
+
+ax_cb.set_xticks([])
+ax_cb.set_yticks(range(nrows))
+ax_cb.set_yticklabels([])
+
+ax_cb.set_title("LMP\nSpread", fontsize=9)
+
+# label only when value changes band
+prev = None
+for i, v in enumerate(z.values):
+    if i == 0 or v != prev:
+        ax_cb.text(
+            0.5, i,
+            str(int(v)) if float(v).is_integer() else str(v),
+            ha="center", va="center",
+            fontsize=8, color="black",
+            bbox=dict(facecolor="white", edgecolor="none", boxstyle="round,pad=0.15")
+        )
+    prev = v
 
 # ------------------------------------------------------------------------------
 #    Build metrics panel (far right): max_loading_pu + 
@@ -225,7 +280,7 @@ near_arr    = np.array(near_vals).reshape(nrows, 1)
 # Subdivide the metrics panel into 3 stacked axes: maxload | nearbind | toplines
 ax_met.axis("off")
 met_gs = gridspec.GridSpecFromSubplotSpec(
-    nrows=1, ncols=4, subplot_spec=gs[0, 2],
+    nrows=1, ncols=4, subplot_spec=gs[0, 3],
     width_ratios=[1.0, 1.0, 1.2, 2.2], wspace=0.20
 )
 
@@ -234,41 +289,55 @@ ax_nb  = fig.add_subplot(met_gs[0, 1])
 ax_obj = fig.add_subplot(met_gs[0, 2])  # objective sparkline
 ax_tl  = fig.add_subplot(met_gs[0, 3])
 
-# Heatbar: max_loading_pu
-im_ml = ax_ml.imshow(maxload_arr, aspect="auto")
+# --------------------------------
+# Table: max_loading_pu (1-column)
+# --------------------------------
 ax_ml.set_title("max\nload", fontsize=9)
 ax_ml.set_xticks([])
 ax_ml.set_yticks(range(nrows))
 ax_ml.set_yticklabels([])
+ax_ml.set_xlim(0, 1)
+ax_ml.set_ylim(nrows, 0)
 
-# write values inside the bar
 for i, v in enumerate(maxload_vals):
+    face = "#D3D3D3" if v != 1.0 else "white"   # highlight != 1.0
     ax_ml.text(
-        0, i, f"{v:.2f}",
+        0.5, i + 0.5,
+        f"{v:.2f}",
         ha="center", va="center", fontsize=9,
-        bbox=dict(facecolor="white", edgecolor="none", boxstyle="round,pad=0.15")
+        bbox=dict(
+            facecolor=face,
+            edgecolor="black",
+            boxstyle="round,pad=0.25"
+        )
     )
-# Legend for max loading pu (bar)- commened out to reduce clutter
-# fig.colorbar(im_ml, ax=ax_ml, fraction=0.046, pad=0.02)
 
-# Heatbar: near_bind_ct
-im_nb = ax_nb.imshow(near_arr, aspect="auto")
+# ------------------------------
+# Table: near_bind_ct (1-column)
+# ------------------------------
 ax_nb.set_title("near\nbind", fontsize=9)
 ax_nb.set_xticks([])
 ax_nb.set_yticks(range(nrows))
 ax_nb.set_yticklabels([])
+ax_nb.set_xlim(0, 1)
+ax_nb.set_ylim(nrows, 0)
 
-# write values inside the bar
 for i, v in enumerate(near_vals):
+    face = "#D3D3D3" if v != 1 else "white"   # highlight != 1
     ax_nb.text(
-        0, i, f"{int(v)}",
+        0.5, i + 0.5,
+        f"{int(v)}",
         ha="center", va="center", fontsize=9,
-        bbox=dict(facecolor="white", edgecolor="none", boxstyle="round,pad=0.15")
+        bbox=dict(
+            facecolor=face,
+            edgecolor="black",
+            boxstyle="round,pad=0.25"
+        )
     )
-# Legend for near bind ct (bar) - commented out to reduce clutter
-# fig.colorbar(im_nb, ax=ax_nb, fraction=0.046, pad=0.02)
 
+# -----------------------------------------------
 # Sparkline: objective vs row (aligned with cases)
+# -----------------------------------------------
 ax_obj.set_title("obj", fontsize=9)
 y = np.arange(nrows)
 

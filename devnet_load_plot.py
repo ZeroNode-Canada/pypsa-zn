@@ -1,26 +1,43 @@
-"""
-devnet_load_plot.py
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright 2025 ZeroNode
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Objective
-- Generate a 4-panel stacked plot of DevNet system metrics vs total system load.
+# devnet_load_plot.py
+# 
+# Objective
+# - Generate a 4-panel stacked plot of DevNet system metrics vs total system load.
+# 
+# What it does
+# - Reads a single worksheet from devnet_plots.xlsx, auto-detects required metric columns,
+#   sorts cases by total system load, and saves a PNG with:
+#   (1) Objective (system cost) with infeasible points marked as INF,
+#   (2) LMP spread,
+#   (3) Max line loading (p.u.),
+#   (4) Near-bind constraint count.
+# 
+# Inputs
+# - Excel file: <script_dir>/devnet-stress-vectors/devnet_plots.xlsx
+# - Sheet: DevNet_load<>SystemCost
+# - Header row index: HDR_ROW (default 9)
+# 
+# Outputs
+# - PNG file: <script_dir>/denvnet-stress-vectors/load_vs_metrics.png
+# - Console: prints output path; raises KeyError if required columns are missing.
 
-What it does
-- Reads a single worksheet from devnet_plots.xlsx, auto-detects required metric columns,
-  sorts cases by total system load, and saves a PNG with:
-  (1) Objective (system cost) with infeasible points marked as INF,
-  (2) LMP spread,
-  (3) Max line loading (p.u.),
-  (4) Near-bind constraint count.
-
-Inputs
-- Excel file: <script_dir>/denvnet-stress-vectors/devnet_plots.xlsx
-- Sheet: DevNet_load<>SystemCost
-- Header row index: HDR_ROW (default 9)
-
-Outputs
-- PNG file: <script_dir>/denvnet-stress-vectors/load_vs_metrics.png
-- Console: prints output path; raises KeyError if required columns are missing.
-"""
+# Run: devnet_load_plot.py
+# ------------------------------------------------------------------------------
 
 import os
 import shutil
@@ -34,7 +51,7 @@ import numpy as np
 #   Configuration: paths, filenames, worksheet selection 
 # ------------------------------------------------------------------------------
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-TEST_VECTORS_DIR_NAME = "denvnet-stress-vectors"
+TEST_VECTORS_DIR_NAME = "devnet-stress-vectors"
 
 DEVNET_XLSX_NAME = "devnet_plots.xlsx"
 SHEET_NAME = "DevNet_load<>SystemCost"
@@ -42,7 +59,7 @@ DEVNET_XLSX_PATH = os.path.join(SCRIPT_DIR, TEST_VECTORS_DIR_NAME)
 DEVNET_XLSX = os.path.join(DEVNET_XLSX_PATH, DEVNET_XLSX_NAME)
 
 LOAD_PLOT_PNG_NAME = "load_vs_metrics.png"
-LOAD_PLOT_PNG_PATH = os.path.join(SCRIPT_DIR, "denvnet-stress-vectors")
+LOAD_PLOT_PNG_PATH = os.path.join(SCRIPT_DIR, "devnet-stress-vectors")
 LOAD_PLOT_PNG = os.path.join(LOAD_PLOT_PNG_PATH, LOAD_PLOT_PNG_NAME)
 
 # ------------------------------------------------------------------------------

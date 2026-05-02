@@ -1,0 +1,582 @@
+<!doctype html>
+<html><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>DevNet Stress Report</title>
+<style>
+body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:20px;}
+a{color:#0b5fff;text-decoration:none} a:hover{text-decoration:underline}
+.nav{position:sticky;top:0;background:#fff;padding:10px 0;border-bottom:1px solid #ddd;}
+.nav a{margin-right:12px}
+pre{background:#f6f8fa;border:1px solid #ddd;padding:12px;border-radius:8px;overflow:auto;}
+.card{margin:18px 0;padding:14px;border:1px solid #eee;border-radius:10px;}
+h1{margin:0 0 8px 0} h2{margin:0 0 10px 0}
+.top-row{display:flex;gap:24px;align-items:flex-start;}
+.left-col{flex:0 0 66vw;max-width:66vw;}
+.right-col{flex:1;min-width:260px;}
+.summary-table{width:100%;table-layout:fixed;border-collapse:collapse;} .summary-table th,.summary-table td{word-break:break-word;overflow-wrap:anywhere;}
+.side-img{display:block;max-width:100%;height:auto;margin:0 auto 12px auto;border:1px solid #ddd;border-radius:10px;}
+.side-pre{background:#f6f8fa;border:1px solid #ddd;padding:12px;border-radius:10px;white-space:pre; font-family:ui-monospace,Consolas,Monaco,'Courier New',monospace;}
+</style></head><body>
+<h1>DevNet Stress Report</h1>
+<h2>Commit Summary</h2>
+<div class='top-row'>
+<div class='left-col'>
+<table class='summary-table'>
+<tr><th style='border:1px solid #ddd;padding:6px;text-align:left'>commit</th><th style='border:1px solid #ddd;padding:6px;text-align:left'>scenario</th><th style='border:1px solid #ddd;padding:6px;text-align:left'>objective</th><th style='border:1px solid #ddd;padding:6px;text-align:left'>lmp_spread</th><th style='border:1px solid #ddd;padding:6px;text-align:left'>max_loading_pu</th><th style='border:1px solid #ddd;padding:6px;text-align:left'>near_bind_ct</th><th style='border:1px solid #ddd;padding:6px;text-align:left'>k_first_near_bind</th></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c1'>c1</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.993e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c2'>c2</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.963e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c3'>c3</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.956e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c4'>c4</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.956e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c5'>c5</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.925e+06</td><td style='border:1px solid #ddd;padding:6px'>0.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>1</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c6'>c6</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.948e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c7'>c7</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.933e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c8'>c8</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.928e+06</td><td style='border:1px solid #ddd;padding:6px'>0.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c9'>c9</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.930e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c10'>c10</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.928e+06</td><td style='border:1px solid #ddd;padding:6px'>0.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c11'>c11</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.928e+06</td><td style='border:1px solid #ddd;padding:6px'>0.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c12'>c12</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>2.353e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c13'>c13</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>2.353e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c14'>c14</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>nan</td><td style='border:1px solid #ddd;padding:6px'>nan</td><td style='border:1px solid #ddd;padding:6px'>nan</td><td style='border:1px solid #ddd;padding:6px'>0</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c15'>c15</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>nan</td><td style='border:1px solid #ddd;padding:6px'>nan</td><td style='border:1px solid #ddd;padding:6px'>nan</td><td style='border:1px solid #ddd;padding:6px'>0</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c16'>c16</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>2.353e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c17'>c17</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>2.413e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c18'>c18</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>2.480e+06</td><td style='border:1px solid #ddd;padding:6px'>30.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c19'>c19</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.956e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c20'>c20</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.948e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c21'>c21</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.933e+06</td><td style='border:1px solid #ddd;padding:6px'>10.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+<tr><td style='border:1px solid #ddd;padding:6px'><a href='#c22'>c22</a></td><td style='border:1px solid #ddd;padding:6px'>baseline</td><td style='border:1px solid #ddd;padding:6px'>1.928e+06</td><td style='border:1px solid #ddd;padding:6px'>0.000</td><td style='border:1px solid #ddd;padding:6px'>1.000</td><td style='border:1px solid #ddd;padding:6px'>2</td><td style='border:1px solid #ddd;padding:6px'></td></tr>
+</table>
+</div>
+<div class='right-col'>
+<img class='side-img' src='../plots/devnetDC-sld.png' alt='DevNetDC SLD'>
+<pre class='side-pre'>
+DevNet base params:
+  Buses_N            = 6
+  dc_p_set (MW)        = 2000.0
+  dc_p_nom (MW)        = 2000.0
+  dc_byog_mc (USD/MWh) = 60.00 [loads.csv]
+  c_g (USD/MWh)      = 50.00
+  line s_nom (MW)    = 5000.0
+
+System-wide adequacy check:
+  Σ p_nom (generation) = 48,000.0 MW
+  Σ p_set (load)       = 32,000.0 MW
+  Adequate?            = YES
+
+Per-bus balance (local surplus/deficit):
+  surplus = Σ p_nom(gen@bus) - Σ p_set(load@bus)
+
+              gen     load   surplus
+  PJM_NE       8000.0   7000.0   1000.0  [EXPORT]
+  WECC_NW      8000.0   5000.0   3000.0  [EXPORT]
+  WECC_SW      8000.0   5000.0   3000.0  [EXPORT]
+  SPP_MISO     8000.0   5000.0   3000.0  [EXPORT]
+  SERC_SE      8000.0   5000.0   3000.0  [EXPORT]
+  ERCOT        8000.0   5000.0   3000.0  [EXPORT]
+</pre>
+</div>
+</div>
+<div class='nav'>
+<b>Commits:</b> 
+<a href='#c1'>c1</a>
+<a href='#c2'>c2</a>
+<a href='#c3'>c3</a>
+<a href='#c4'>c4</a>
+<a href='#c5'>c5</a>
+<a href='#c6'>c6</a>
+<a href='#c7'>c7</a>
+<a href='#c8'>c8</a>
+<a href='#c9'>c9</a>
+<a href='#c10'>c10</a>
+<a href='#c11'>c11</a>
+<a href='#c12'>c12</a>
+<a href='#c13'>c13</a>
+<a href='#c14'>c14</a>
+<a href='#c15'>c15</a>
+<a href='#c16'>c16</a>
+<a href='#c17'>c17</a>
+<a href='#c18'>c18</a>
+<a href='#c19'>c19</a>
+<a href='#c20'>c20</a>
+<a href='#c21'>c21</a>
+<a href='#c22'>c22</a>
+</div>
+<div class='card' id='c1'>
+<h2>c1</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c1::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  k_load={&quot;PJM_NE&quot;: 2.0}  k_line={}  mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=CSV Preset
+objective        : 1.993e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c1_baseline_line_loading_pu.csv
+c1_baseline_lmp.csv
+c1_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c2'>
+<h2>c2</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c2::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  k_load={&quot;PJM_NE&quot;: 2.0}  k_line={}  mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0
+objective        : 1.963e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c2_baseline_line_loading_pu.csv
+c2_baseline_lmp.csv
+c2_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c3'>
+<h2>c3</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c3::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  k_load={&quot;PJM_NE&quot;: 2.0}  k_line={}  mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0
+objective        : 1.956e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c3_baseline_line_loading_pu.csv
+c3_baseline_lmp.csv
+c3_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c4'>
+<h2>c4</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c4::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  ... mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset  dc_p_nom=2500.0
+objective        : 1.956e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c4_baseline_line_loading_pu.csv
+c4_baseline_lmp.csv
+c4_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c5'>
+<h2>c5</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c5::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  ... mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset  dc_p_nom=5000.0
+objective        : 1.925e+06
+lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 1
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:0.90 | L_PJM_NE_SERC_SE:0.90
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c5_baseline_line_loading_pu.csv
+c5_baseline_lmp.csv
+c5_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c6'>
+<h2>c6</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c6::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  ... mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset  dc_p_nom=3000.0
+objective        : 1.948e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c6_baseline_line_loading_pu.csv
+c6_baseline_lmp.csv
+c6_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c7'>
+<h2>c7</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c7::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  ... mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset  dc_p_nom=4000.0
+objective        : 1.933e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c7_baseline_line_loading_pu.csv
+c7_baseline_lmp.csv
+c7_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c8'>
+<h2>c8</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c8::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  ... mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset  dc_p_nom=4500.0
+objective        : 1.928e+06
+lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:0.97 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c8_baseline_line_loading_pu.csv
+c8_baseline_lmp.csv
+c8_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c9'>
+<h2>c9</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c9::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  ... mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset  dc_p_nom=4250.0
+objective        : 1.930e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c9_baseline_line_loading_pu.csv
+c9_baseline_lmp.csv
+c9_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c10'>
+<h2>c10</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c10::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  ... mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4500.0
+objective        : 1.928e+06
+lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:0.97 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c10_baseline_line_loading_pu.csv
+c10_baseline_lmp.csv
+c10_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c11'>
+<h2>c11</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c11::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  ... mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4500.0
+objective        : 1.928e+06
+lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:0.97 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c11_baseline_line_loading_pu.csv
+c11_baseline_lmp.csv
+c11_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c12'>
+<h2>c12</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c12::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  ... mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4000.0
+objective        : 2.353e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c12_baseline_line_loading_pu.csv
+c12_baseline_lmp.csv
+c12_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c13'>
+<h2>c13</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c13::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  k_load={&quot;PJM_NE&quot;: 3.0}  k_line={}  mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4000.0
+objective        : 2.353e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c13_baseline_line_loading_pu.csv
+c13_baseline_lmp.csv
+c13_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c14'>
+<h2>c14</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c14::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  k_load={&quot;PJM_NE&quot;: 3.0}  k_line={}  mc_bus={&quot;PJM_NE&quot;: 70.0}  byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=CSV Preset::2000.0
+objective        : nan
+lmp_spread       : nan   max_lmp: nan @ 
+max_loading_pu   : nan @ 
+near_bind_ct(&gt;=.95): 0
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c14_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c15'>
+<h2>c15</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c15::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  k_load={&quot;PJM_NE&quot;: 3.0}  k_line={}  mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=CSV Preset::2000.0
+objective        : nan
+lmp_spread       : nan   max_lmp: nan @ 
+max_loading_pu   : nan @ 
+near_bind_ct(&gt;=.95): 0
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c15_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c16'>
+<h2>c16</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c16::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  k_load={&quot;PJM_NE&quot;: 3.0}  k_line={}  mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4000.0
+objective        : 2.353e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c16_baseline_line_loading_pu.csv
+c16_baseline_lmp.csv
+c16_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c17'>
+<h2>c17</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c17::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  k_load={&quot;PJM_NE&quot;: 3.0}  k_line={}  mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4000.0
+objective        : 2.413e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c17_baseline_line_loading_pu.csv
+c17_baseline_lmp.csv
+c17_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c18'>
+<h2>c18</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c18::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  k_load={&quot;PJM_NE&quot;: 3.0}  k_line={}  mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=80.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4000.0
+objective        : 2.480e+06
+lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c18_baseline_line_loading_pu.csv
+c18_baseline_lmp.csv
+c18_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c19'>
+<h2>c19</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c19::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  k_load={&quot;PJM_NE&quot;: 2.0}  k_line={}  mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=2500.0
+objective        : 1.956e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c19_baseline_line_loading_pu.csv
+c19_baseline_lmp.csv
+c19_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c20'>
+<h2>c20</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c20::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  k_load={&quot;PJM_NE&quot;: 2.0}  k_line={}  mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=3000.0
+objective        : 1.948e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c20_baseline_line_loading_pu.csv
+c20_baseline_lmp.csv
+c20_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c21'>
+<h2>c21</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c21::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  k_load={&quot;PJM_NE&quot;: 2.0}  k_line={}  mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4000.0
+objective        : 1.933e+06
+lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:1.00 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c21_baseline_line_loading_pu.csv
+c21_baseline_lmp.csv
+c21_baseline_objective.csv
+</pre>
+</div>
+<div class='card' id='c22'>
+<h2>c22</h2>
+<pre>
+================================================================================
+ASR-DASH::COMMIT::c22::baseline
+----------------------------------------
+args: scenario=baseline  mc_mode=set  line=-  k_load={&quot;PJM_NE&quot;: 2.0}  k_line={}  mc_bus={&quot;PJM_NE&quot;: 60.0}  byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4500.0
+objective        : 1.928e+06
+lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+max_loading_pu   : 1.000 @ L_WECC_SW_SPP_MISO
+near_bind_ct(&gt;=.95): 2
+top_lines        : L_WECC_SW_SPP_MISO:1.00 | L_SPP_MISO_PJM_NE:0.97 | L_PJM_NE_SERC_SE:0.93
+================================================================================
+
+</pre>
+<div style='margin-top:10px'><b>CSV artifacts:</b></div>
+<pre>
+c22_baseline_line_loading_pu.csv
+c22_baseline_lmp.csv
+c22_baseline_objective.csv
+</pre>
+</div>
+</body></html>

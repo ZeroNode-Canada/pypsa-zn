@@ -1,0 +1,8 @@
+{
+  "snapshot": "now",
+  "objective": NaN,
+  "lmp": {},
+  "line_loading_pu": {},
+  "status": "infeasible",
+  "reason": "Optimization failed or infeasible (objective not numeric)."
+}

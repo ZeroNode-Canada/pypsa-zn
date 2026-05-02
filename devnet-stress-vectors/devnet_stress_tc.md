@@ -1,9 +1,46 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright 2025 ZeroNode
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# devnet_stress_tc.md
+# ------------------------------------------------------------------------------
+
+
 # Devnet Stress Test Vectors
 DevNet Stress Test Vector: Structure, design and implementation
 
 ---
 
 # Table of Contents
+- [SPDX-License-Identifier: Apache-2.0](#spdx-license-identifier-apache-20)
+- [](#)
+- [Copyright 2025 ZeroNode](#copyright-2025-zeronode)
+- [](#-1)
+- [Licensed under the Apache License, Version 2.0 (the "License");](#licensed-under-the-apache-license-version-20-the-license)
+- [you may not use this file except in compliance with the License.](#you-may-not-use-this-file-except-in-compliance-with-the-license)
+- [You may obtain a copy of the License at](#you-may-obtain-a-copy-of-the-license-at)
+- [](#-2)
+- [http://www.apache.org/licenses/LICENSE-2.0](#httpwwwapacheorglicenseslicense-20)
+- [](#-3)
+- [Unless required by applicable law or agreed to in writing, software](#unless-required-by-applicable-law-or-agreed-to-in-writing-software)
+- [distributed under the License is distributed on an "AS IS" BASIS,](#distributed-under-the-license-is-distributed-on-an-as-is-basis)
+- [WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.](#without-warranties-or-conditions-of-any-kind-either-express-or-implied)
+- [See the License for the specific language governing permissions and](#see-the-license-for-the-specific-language-governing-permissions-and)
+- [limitations under the License.](#limitations-under-the-license)
+- [devnet\_stress\_tc.md](#devnet_stress_tcmd)
+- [------------------------------------------------------------------------------](#------------------------------------------------------------------------------)
 - [Devnet Stress Test Vectors](#devnet-stress-test-vectors)
 - [Table of Contents](#table-of-contents)
 - [Devnet Stress Test Vectors](#devnet-stress-test-vectors-1)
@@ -13,55 +50,42 @@ DevNet Stress Test Vector: Structure, design and implementation
   - [Per-Bus Balance (Local Surplus / Deficit)](#per-bus-balance-local-surplus--deficit)
   - [Generator Marginal Cost](#generator-marginal-cost)
   - [DevNet Stress Test Cases](#devnet-stress-test-cases)
+  - [DevNet Stress Test Cases: Work Trace](#devnet-stress-test-cases-work-trace)
     - [DevNet Stress Test::Local-Supply Dominated::Test Case 1](#devnet-stress-testlocal-supply-dominatedtest-case-1)
-      - [Local-Supply Dominated::Test Case 1 A: Conditions](#local-supply-dominatedtest-case-1-a-conditions)
-      - [Local-Supply Dominated::Test Case 1 A: Expected Results](#local-supply-dominatedtest-case-1-a-expected-results)
-      - [Local-Supply Dominated::Test Case 1 A: Results](#local-supply-dominatedtest-case-1-a-results)
-      - [Local-Supply Dominated::Test Case 1 B: Conditions](#local-supply-dominatedtest-case-1-b-conditions)
-      - [Local-Supply Dominated::Test Case 1 B: Expected Results](#local-supply-dominatedtest-case-1-b-expected-results)
-      - [Local-Supply Dominated::Test Case 1 B: Results](#local-supply-dominatedtest-case-1-b-results)
-    - [DevNet Stress Test::Local-Supply Dominated::Test Case 1 C](#devnet-stress-testlocal-supply-dominatedtest-case-1-c)
-      - [Local-Supply Dominated::Test Case 1 C: Conditions](#local-supply-dominatedtest-case-1-c-conditions)
-      - [Local-Supply Dominated::Test Case 1 C: Expected Results](#local-supply-dominatedtest-case-1-c-expected-results)
-        - [DevNet Stress Test::Local-Supply Dominated:Test Case 1 C: Results](#devnet-stress-testlocal-supply-dominatedtest-case-1-c-results)
-    - [DevNet Stress Test::Topology-Constrained::Test Case 2](#devnet-stress-testtopology-constrainedtest-case-2)
-      - [Topology-Constrained::Test Case 2 A: Conditions](#topology-constrainedtest-case-2-a-conditions)
-      - [Topology-Constrained::Test Case 2 A: Expected Results](#topology-constrainedtest-case-2-a-expected-results)
-      - [Topology-Constrained::Test Case 2 A: Results](#topology-constrainedtest-case-2-a-results)
-      - [Topology-Constrained::Test Case 2 B: Conditions](#topology-constrainedtest-case-2-b-conditions)
-      - [Topology-Constrained::Test Case 2 B: Expected Results](#topology-constrainedtest-case-2-b-expected-results)
-      - [Topology-Constrained::Test Case 2 B: Results](#topology-constrainedtest-case-2-b-results)
-        - [ASR-DASH — Commit `c3` (single): Run Configuration](#asr-dash--commit-c3-single-run-configuration)
-        - [Explanation: Near-Binding Count (`near_bind_ct`) = 6](#explanation-near-binding-count-near_bind_ct--6)
-    - [DevNet Stress Test::Transmission Line capacity deration::Test Case 2 C](#devnet-stress-testtransmission-line-capacity-derationtest-case-2-c)
-      - [Topology-Constrained::Test Case 2 C: Conditions](#topology-constrainedtest-case-2-c-conditions)
-      - [Topology-Constrained::Test Case 2 C: Expected Results](#topology-constrainedtest-case-2-c-expected-results)
-        - [DevNet Stress Test::Transmission Line capacity deration:Test Case 2 C: Results](#devnet-stress-testtransmission-line-capacity-derationtest-case-2-c-results)
-    - [DevNet Stress Test::LMP Spread (`lmp_spread`)::Test Case 3](#devnet-stress-testlmp-spread-lmp_spreadtest-case-3)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 A: Conditions](#lmp-spread-lmp_spreadtest-case-3-a-conditions)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 A: Expected Results](#lmp-spread-lmp_spreadtest-case-3-a-expected-results)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 A: Results](#lmp-spread-lmp_spreadtest-case-3-a-results)
-        - [ASR-DASH — Commit `c4` (single): Run Configuration](#asr-dash--commit-c4-single-run-configuration)
+      - [Local-Supply Dominated::Test Case 1: Conditions](#local-supply-dominatedtest-case-1-conditions)
+      - [Local-Supply Dominated::Test Case 1: Expected Results](#local-supply-dominatedtest-case-1-expected-results)
+        - [DevNet Stress Test::Local-Supply Dominated:Test Case 1: Results](#devnet-stress-testlocal-supply-dominatedtest-case-1-results)
+    - [DevNet Stress Test::Transmission Line capacity deration::Test Case 2](#devnet-stress-testtransmission-line-capacity-derationtest-case-2)
+      - [Topology-Constrained::Test Case 2: Conditions](#topology-constrainedtest-case-2-conditions)
+      - [Topology-Constrained::Test Case 2: Expected Results](#topology-constrainedtest-case-2-expected-results)
+        - [DevNet Stress Test::Transmission Line capacity deration:Test Case 2: Results](#devnet-stress-testtransmission-line-capacity-derationtest-case-2-results)
+    - [DevNet Stress Test::LMP Spread (`lmp_spread`) Probe::Test Case 3](#devnet-stress-testlmp-spread-lmp_spread-probetest-case-3)
+      - [LMP Spread (`lmp_spread`) Probe::Test Case 3 A: Conditions](#lmp-spread-lmp_spread-probetest-case-3-a-conditions)
+      - [LMP Spread (`lmp_spread`) Probe::Test Case 3 A: Expected Results](#lmp-spread-lmp_spread-probetest-case-3-a-expected-results)
+      - [LMP Spread (`lmp_spread`) Probe::Test Case 3 A: Results](#lmp-spread-lmp_spread-probetest-case-3-a-results)
+        - [ASR-DASH — Commit `c*` (single): Run Configuration](#asr-dash--commit-c-single-run-configuration)
         - [DC OPF power balance equation evaluation](#dc-opf-power-balance-equation-evaluation)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 B: Conditions](#lmp-spread-lmp_spreadtest-case-3-b-conditions)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 B: Expected Results](#lmp-spread-lmp_spreadtest-case-3-b-expected-results)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 B: Results](#lmp-spread-lmp_spreadtest-case-3-b-results)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 C: Conditions](#lmp-spread-lmp_spreadtest-case-3-c-conditions)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 C: Expected Results](#lmp-spread-lmp_spreadtest-case-3-c-expected-results)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 C: Results](#lmp-spread-lmp_spreadtest-case-3-c-results)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 D: Conditions](#lmp-spread-lmp_spreadtest-case-3-d-conditions)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 D: Expected Results](#lmp-spread-lmp_spreadtest-case-3-d-expected-results)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 D: Results](#lmp-spread-lmp_spreadtest-case-3-d-results)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 E: Conditions](#lmp-spread-lmp_spreadtest-case-3-e-conditions)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 E: Expected Results](#lmp-spread-lmp_spreadtest-case-3-e-expected-results)
-        - [Explantion: LMP\_Spread trigger with Scarcity pricing](#explantion-lmp_spread-trigger-with-scarcity-pricing)
-      - [LMP Spread (`lmp_spread`)::Test Case 3 E: Results](#lmp-spread-lmp_spreadtest-case-3-e-results)
-        - [ASR-DASH — Commit `c8` (single): Run Configuration](#asr-dash--commit-c8-single-run-configuration)
-        - [Explanation: Operating Cost with LMP Spread](#explanation-operating-cost-with-lmp-spread)
+        - [LMP Spread (`lmp_spread`) Probe::Test Case 3 A: Objective \& Key takeaway](#lmp-spread-lmp_spread-probetest-case-3-a-objective--key-takeaway)
+      - [LMP Spread (`lmp_spread`) Probe::Test Case 3 B: Conditions](#lmp-spread-lmp_spread-probetest-case-3-b-conditions)
+      - [LMP Spread (`lmp_spread`) Probe::Test Case 3 B: Expected Results](#lmp-spread-lmp_spread-probetest-case-3-b-expected-results)
+        - [LMP Spread (`lmp_spread`) Probe::Test Case 3 B: Explantion: LMP\_Spread trigger with Scarcity pricing](#lmp-spread-lmp_spread-probetest-case-3-b-explantion-lmp_spread-trigger-with-scarcity-pricing)
+      - [LMP Spread (`lmp_spread`) Probe::Test Case 3 B: Results](#lmp-spread-lmp_spread-probetest-case-3-b-results)
+        - [ASR-DASH — Commit `c*` (single): Run Configuration](#asr-dash--commit-c-single-run-configuration-1)
+        - [Calculations: Operating Cost with LMP Spread](#calculations-operating-cost-with-lmp-spread)
         - [DC OPF power balance equation evaluation \[TBC\]](#dc-opf-power-balance-equation-evaluation-tbc)
     - [DevNet Stress Test::LMP Spread (`lmp_spread`)::Test Plan](#devnet-stress-testlmp-spread-lmp_spreadtest-plan)
       - [DevNet Stress Test::LMP Spread (`lmp_spread`)::Test Case 4](#devnet-stress-testlmp-spread-lmp_spreadtest-case-4)
+        - [DevNet Stress Test::LMP Spread (`lmp_spread`)::Test Case 4: Conditons](#devnet-stress-testlmp-spread-lmp_spreadtest-case-4-conditons)
+        - [DevNet Stress Test::LMP Spread (`lmp_spread`)::Test Case 4: Cases](#devnet-stress-testlmp-spread-lmp_spreadtest-case-4-cases)
         - [DevNet Stress Test::LMP Spread (`lmp_spread`)::Test Case 4: Results](#devnet-stress-testlmp-spread-lmp_spreadtest-case-4-results)
+    - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Plan](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-plan)
+      - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-case-5)
+      - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5: Conditions](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-case-5-conditions)
+      - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5: Cases](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-case-5-cases)
+        - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case\[byog competes\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadcasebyog-competes)
+        - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Observations\[byog competes\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadobservationsbyog-competes)
+        - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case\[byog complements\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadcasebyog-complements)
+        - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Observations\[byog complements\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadobservationsbyog-complements)
 - [Reference](#reference)
 
 
@@ -139,83 +163,38 @@ $line_{snom} = 5,000\text{ MW}$
 ## DevNet Stress Test Cases
 **Refer:**  
 - [PyPSA_dev.md::PyPSA "USA-lite" network: Datacenter BYOG Modelling- Stress & Asymptote find](../../../EnergySystemAnalysis-%20PyPSA/PyPSA_dev.md)
+
+## DevNet Stress Test Cases: Work Trace 
+**ASR-TODO>>DONE:** **Date: 26 March 2026**  
+Clean up .\devnet_stress_tc.md to have:
+- Only gold references test cases captured at [DevNet Stress Report_5.html](./DevNet%20Stress%20Report_5.html)  
+  - DevNet Stress Test::Local-Supply Dominated::Test Case 1 C
+  - DevNet Stress Test::Transmission Line capacity deration::Test Case 2 C
+  - DevNet Stress Test::LMP Spread (`lmp_spread`)::Test Case 4
+- Explanations and notes aligned with these gold reference test set
+
+**ASR-Note:** **Date: 03 March 2026**  
+**Base Replication Reference:**    
+- [DevNet Stress Report_5.html](./DevNet%20Stress%20Report_5.html)  
+
+**ASR-Note:** **Date: 20 March 2026**  
+**Re-Run & Reviewed Base Replication Reference:**  
+- [pypsa-zn\devnet-sld-20Mar2026\stress_out](../devnet-sld-20Mar2026/stress_out/index.html)  
+
+**ASR-TODO>>DONE:** **Date: 26 March 2026**  
+Based on cleanup of .\devnet_stress_tc.md per above, review/Document/Delete:  
+- [DevNet Stress Report_3.html](./DevNet%20Stress%20Report_3.html)
+- [DevNet Stress Report_3.pdf](./DevNet%20Stress%20Report_3.pdf)
 - [DevNet Stress Report_4.html](./DevNet%20Stress%20Report_4.html)
 
+**ASR-Note:** **Date: 15 April 2026**  
+- [**Datacenter BYOG Replication:** pypsa-zn\devnetDC-sld-15Apr2026\stress_out](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-case-5)  
+- [DCbyogDevNetStressReport.html](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-case-5-cases)
+
+---
+
 ### DevNet Stress Test::Local-Supply Dominated::Test Case 1
-**Local-Supply Dominated Regime:**
-- High system load (e.g. all buses ×1.5)
-- No line derating
-- Each bus serves load locally
-- Minimal inter-bus flows
-
-Result:
-- `max_loading_pu` **drops** (e.g. ~0.25)
-- Grid becomes *structurally irrelevant*
-
-**Per-bus load multiplier preset (k_load):**  
-$Bus_{Load} >= Bus_{GenCap}$  
-$Bus_{GenCap} = 8000.0 MW$  
-$Bus_{Load} = 5000.0 MW$  
-$Bus_{LoadStressFactor} =  Bus_{Load}/Bus_{GenCap} = 1.6$
-
-#### Local-Supply Dominated::Test Case 1 A: Conditions
-$Bus_{Load} = Bus_{GenCap}$  
-$Bus_{GenCap} = 8000.0 MW$  
-$Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
-$Bus_{LoadStressFactor} =  Bus_{Load}/Bus_{GenCap} = 1.6$
-$Bus_{Load} = 8000.0 MW$  
-$Total System Load = Buses_N * Bus_{Load} = 6 * 8000 = 48,000\text{ MW}$  
-
-$line_{snom} = 5,000\text{ MW}$  
-$c_g = marginal cost (USD/MWh) = 50.00$  
-
-#### Local-Supply Dominated::Test Case 1 A: Expected Results
-$Operating Cost = \{Total System Load * c_g\} = \{Buses_N * Bus_{Load} * c_g\}$  
-$= \{6 * 8000 * 50\} = USD\text{ 2,400,000}$  
-
-#### Local-Supply Dominated::Test Case 1 A: Results
-
-**Output Path:** `./stress_out/Commit C1`
-
-| Commit | Scenario | Objective (USD) | LMP Spread | Max Loading (p.u.) | Near-Binding Constraints | k (First Near-Bind) |
-|--------|----------|-----------------|------------|-------------------|--------------------------|---------------------|
-| c1     | single   | 2.400e+06       | 0.000      | 0.000             | 0                        | 
-
----
-
-#### Local-Supply Dominated::Test Case 1 B: Conditions
-$Bus_{Load} = Bus_{GenCap}$  
-$Bus_{GenCap} = 8000.0 MW$  
-$Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
-$Bus_{LoadStressFactor} >  Bus_{Load}/Bus_{GenCap} = 2.0$
-$Bus_{Load} = 10,000.0 MW$  
-$Total System Load = Buses_N * Bus_{Load} = 6 * 10000 = 60,000\text{ MW}$  
-
-$line_{snom} = 5,000\text{ MW}$  
-$c_g = marginal cost (USD/MWh) = 50.00$  
-
-#### Local-Supply Dominated::Test Case 1 B: Expected Results
-$Total System Load > Total Generation Capacity$  
-$= 60,000\text{ MW} > 48,000\text{ MW}$  
-**Infeasible Objective...**  
-$Operating Cost = \{Total System Load * c_g\} = \{Buses_N * Bus_{Load} * c_g\}$  
-$= \{6 * 10000 * 50\} = USD\text{ 2,400,000}$  
-
-#### Local-Supply Dominated::Test Case 1 B: Results
-
-**Output Path:** `./stress_out/Commit C4`
-
-| Commit | Scenario | Objective (USD) | LMP Spread | Max Loading (p.u.) | Near-Binding Constraints | k (First Near-Bind) |
-|--------|----------|-----------------|------------|-------------------|--------------------------|---------------------|
-| c4     | single   | nan       | nan      | nan             | 0                        | 
-
-**ASR- TODO>>DONE:** Check/Fix:  
-The Commit C4 gets overwritten i.e. when a commit is nan, it is overwritten.  
-
----
-
-### DevNet Stress Test::Local-Supply Dominated::Test Case 1 C
-Refer:  
+Base Replication Reference:    
 - [DevNet Stress Report_5.html](./DevNet%20Stress%20Report_5.html)  
 - Commit ID: [11,... 16]
 
@@ -226,7 +205,7 @@ $Bus_{GenCap} = 8000.0 MW$
 $Bus_{Load} = 5000.0 MW$  
 $Bus_{LoadStressFactor} =  Bus_{Load}/Bus_{GenCap} = 1.6$
 
-#### Local-Supply Dominated::Test Case 1 C: Conditions
+#### Local-Supply Dominated::Test Case 1: Conditions
 $Bus_{Load} = Bus_{GenCap}$  
 $Bus_{GenCap} = 8000.0 MW$  
 $Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
@@ -258,7 +237,7 @@ $Total System Load = Buses_N * Bus_{Load} =$ {
 $line_{snom} = 5,000\text{ MW}$  
 $c_g = marginal cost (USD/MWh) = 50.00$  
 
-#### Local-Supply Dominated::Test Case 1 C: Expected Results
+#### Local-Supply Dominated::Test Case 1: Expected Results
 $Operating Cost = \{Total System Load * c_g\}\equiv$ {  
   30000 * 50 = 1,500,000 $  
   36000 * 50 = 1,800,000 $  
@@ -268,152 +247,19 @@ $Operating Cost = \{Total System Load * c_g\}\equiv$ {
   60000 * 50 = 3,000,000 $  
 }  
 
-##### DevNet Stress Test::Local-Supply Dominated:Test Case 1 C: Results
+##### DevNet Stress Test::Local-Supply Dominated:Test Case 1: Results
 **Refer:** [devnet_plots.xlsx:DevNet_load<>SystemCost](devnet_plots.xlsx)  
 
 ---
 
-### DevNet Stress Test::Topology-Constrained::Test Case 2
-**Topology-Constrained Regime:**
-- Same high load
-- Strong line derating (e.g. all lines ×0.3 or ×0.1)
-
-Result:
-- Even small balancing flows saturate reduced capacities
-- `max_loading_pu → 1.0`
-
-Interpretation:
-> Line saturation here reflects **topological choking**, not increased demand.
-
-#### Topology-Constrained::Test Case 2 A: Conditions
-$Bus_{Load} = Bus_{GenCap}$  
-$Bus_{GenCap} = 8000.0 MW$  
-$Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
-$Bus_{LoadStressFactor} =  Bus_{Load}/Bus_{GenCap} = 1.6$
-$Bus_{Load} = 8000.0 MW$  
-$Total System Load = Buses_N * Bus_{Load} = 6 * 8000 = 48,000\text{ MW}$  
-
-$line_{snom} = 5,000\text{ MW}$  
-$c_g = marginal cost (USD/MWh) = 50.00$  
-
-k_line= {  
-    "L_WECC_NW_WECC_SW": 0.1, "L_WECC_SW_SPP_MISO": 0.1, "L_SPP_MISO_ERCOT": 0.1,  
-    "L_SPP_MISO_PJM_NE": 0.1, "L_PJM_NE_SERC_SE": 0.1, "L_SERC_SE_ERCOT": 0.1  
-        }  
-$line_{snom} = 5000$  
-$line_{effectiveCap} = 0.1 * 5000 = 500\text{ MW}$  
-
-#### Topology-Constrained::Test Case 2 A: Expected Results
-$Operating Cost = \{Total System Load * c_g\} = \{Buses_N * Bus_{Load} * c_g\}$  
-$= \{6 * 8000 * 50\} = USD\text{ 2,400,000}$  
-
-#### Topology-Constrained::Test Case 2 A: Results
-
-**Output Path:** `./stress_out/Commit C2`
-
-| Commit | Scenario | Objective (USD) | LMP Spread | Max Loading (p.u.) | Near-Binding Constraints | k (First Near-Bind) |
-|--------|----------|-----------------|------------|-------------------|--------------------------|---------------------|
-| c2     | single   | 2.400e+06       | 0.000      | 0.000             | 0                        | 0                   |
-
----
-
-#### Topology-Constrained::Test Case 2 B: Conditions
-$Bus_{Load} = Bus_{GenCap}$  
-$Bus_{GenCap} = 8000.0 MW$  
-$Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
-$Bus_{LoadStressFactor} = Bus_{Load}/Bus_{GenCap} = 1.0\text{ default}$  
-$Bus_{Load} = 5000.0 MW$  
-$Total System Load = Buses_N * Bus_{Load} = 6 * 5000 = 30,000\text{ MW}$  
-
-$line_{snom} = 5,000\text{ MW}$  
-$c_g = marginal cost (USD/MWh) = 50.00$  
-
-k_line= {  
-    "L_WECC_NW_WECC_SW": 0.1, "L_WECC_SW_SPP_MISO": 0.1, "L_SPP_MISO_ERCOT": 0.1,  
-    "L_SPP_MISO_PJM_NE": 0.1, "L_PJM_NE_SERC_SE": 0.1, "L_SERC_SE_ERCOT": 0.1  
-        }  
-$line_{snom} = 5000$  
-$line_{effectiveCap} = 0.1 * 5000 = 500\text{ MW}$  
-
-#### Topology-Constrained::Test Case 2 B: Expected Results
-$Operating Cost = \{Total System Load * c_g\} = \{Buses_N * Bus_{Load} * c_g\}$  
-$= \{6 * 5000 * 50\} = USD\text{ 1,500,000}$  
-
-#### Topology-Constrained::Test Case 2 B: Results
-
-**Output Path:** `./stress_out/Commit C3`
-
-| Commit | Scenario | Objective (USD) | LMP Spread | Max Loading (p.u.) | Near-Binding Constraints | k (First Near-Bind) |
-|--------|----------|-----------------|------------|-------------------|--------------------------|---------------------|
-| c3     | single   | 1.500e+06       | 0.000      | 0.000             | 6                        | 
-
----
-
-##### ASR-DASH — Commit `c3` (single): Run Configuration
-
-| Parameter | Value                                                                                                                                                       |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| scenario  | single                                                                                                                                                      |
-| mc_mode   | set                                                                                                                                                         |
-| line      | -                                                                                                                                                           |
-| k_load    | `{}`                                                                                                                                                        |
-| k_line    | `{"L_WECC_NW_WECC_SW": 0.1, "L_WECC_SW_SPP_MISO": 0.1, "L_SPP_MISO_ERCOT": 0.1, "L_SPP_MISO_PJM_NE": 0.1, "L_PJM_NE_SERC_SE": 0.1, "L_SERC_SE_ERCOT": 0.1}` |
-| mc_bus    | `{}`                                                                                                                                                        |
-| dc_site   | N                                                                                                                                                           |
-
-**Results Summary:**
-
-| Metric                                | Value                     |
-| ------------------------------------- | ------------------------- |
-| Objective (USD)                       | 1.500e+06                 |
-| LMP Spread (USD/MWh)                  | 0.000                     |
-| Max LMP                               | 50.000 @ WECC_NW          |
-| Max Line Loading (p.u.)               | 1.000 @ L_WECC_NW_WECC_SW |
-| Near-binding Constraints (≥0.95 p.u.) | 6                         |
-
-**Most Stressed Lines:**
-
-| Line               | Loading (p.u.) |
-| ------------------ | -------------- |
-| L_WECC_NW_WECC_SW  | 1.00           |
-| L_WECC_SW_SPP_MISO | 1.00           |
-| L_SPP_MISO_ERCOT   | 1.00           |
-
----
-
-**ASR- TODO>>DONE:** Explain the Near-Binding Count (`near_bind_ct`) = 6  
-##### Explanation: Near-Binding Count (`near_bind_ct`) = 6  
-Given:  
-k_line= {  
-    "L_WECC_NW_WECC_SW": 0.1, "L_WECC_SW_SPP_MISO": 0.1, "L_WECC_SW_SPP_MISO": 0.1,  
-    "L_SPP_MISO_PJM_NE": 0.1, "L_PJM_NE_SERC_SE": 0.1, "L_SERC_SE_ERCOT": 0.1  
-        }  
-$line_{snom} = 5000$  
-$line_{effectiveCap} = 0.1 * 5000 = 500\text{ MW}$  
-
-$Lines_{effective}$ [  
-    L_WECC_NW_WECC_SW, L_WECC_SW_SPP_MISO, L_WECC_SW_SPP_MISO, 
-    L_SPP_MISO_PJM_NE, L_PJM_NE_SERC_SE, L_SERC_SE_ERCOT
-    ] 
-
-**Key Points:**
-* `near_bind_ct` **is not** the count of lines with *small effective capacity* relative to load.
-* `near_bind_ct` counts **lines whose actual loading ≥ 0.95 p.u.** *in the solved DC OPF result*.
-* ✅ **After** the DC OPF solves each of the **6 lines** ends up with:
-  * $\frac{|F_{\text{line}}|}{s_{\text{nom, effective}}} \ge 0.95$
-* ✅ Therefore `near_bind_ct = 6`
-* Near-binding lines are those whose **post-solution loading ≥ 0.95 p.u.**, not those merely configured with low `k_line`.
-
----
-
-### DevNet Stress Test::Transmission Line capacity deration::Test Case 2 C
-Refer:  
+### DevNet Stress Test::Transmission Line capacity deration::Test Case 2
+Base Replication Reference:  
 - [DevNet Stress Report_5.html](./DevNet%20Stress%20Report_5.html)  
 - Commit ID: [17,... 22]
 
 **Objective: Derate transmission line capacities incrementally from default 1.0 > 0.1 and observe effect on near binding constraint count (near_bind_ct), max_loading_pu, LMP Spread and system operational costs- objective function**
 
-#### Topology-Constrained::Test Case 2 C: Conditions
+#### Topology-Constrained::Test Case 2: Conditions
 $Bus_{Load} = Bus_{GenCap}$  
 $Bus_{GenCap} = 8000.0 MW$  
 $Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
@@ -466,16 +312,29 @@ k_line= {
 $line_{snom} = 5000$  
 $line_{effectiveCap} = 0.1 * 5000 = 500\text{ MW}$  
 
-#### Topology-Constrained::Test Case 2 C: Expected Results
+#### Topology-Constrained::Test Case 2: Expected Results
 $Operating Cost = \{Total System Load * c_g\} = \{Buses_N * Bus_{Load} * c_g\}$  
 $= \{6 * 5000 * 50\} = USD\text{ 1,500,000}$  
 
-##### DevNet Stress Test::Transmission Line capacity deration:Test Case 2 C: Results
+##### DevNet Stress Test::Transmission Line capacity deration:Test Case 2: Results
 **Refer:** [devnet_plots.xlsx:DevNet_line<>near_bind_ct](devnet_plots.xlsx)  
+
+**Key Points:**
+* `near_bind_ct` **is not** the count of lines with *small effective capacity* relative to load.
+* `near_bind_ct` counts **lines whose actual loading ≥ 0.95 p.u.** *in the solved DC OPF result*.
+* ✅ **After** the DC OPF solves each of the **6 lines** ends up with:
+  * $\frac{|F_{\text{line}}|}{s_{\text{nom, effective}}} \ge 0.95$
+* ✅ Therefore `near_bind_ct = 6`
+* Near-binding lines are those whose **post-solution loading ≥ 0.95 p.u.**, not those merely configured with low `k_line`.
 
 ---
 
-### DevNet Stress Test::LMP Spread (`lmp_spread`)::Test Case 3
+### DevNet Stress Test::LMP Spread (`lmp_spread`) Probe::Test Case 3
+**ASR-Note:**  
+LMP Spread (`lmp_spread`) Probe::Test Case 3 [A, B] commit references can be inferred from:  
+- [DevNet Stress Report_5.html](./DevNet%20Stress%20Report_5.html)  
+- **commit id's will not correlate.** The run DevNet Stress Report_*.html have been deleted to declutter documentation. 
+
 *Definition:**
 For buses \( i \):
 
@@ -492,7 +351,7 @@ For LMPs to separate, **both** must occur:
 - a bus **cannot meet its load locally**, and
 - imports to that bus are **constrained**
 
-#### LMP Spread (`lmp_spread`)::Test Case 3 A: Conditions
+#### LMP Spread (`lmp_spread`) Probe::Test Case 3 A: Conditions
 $Bus_{Load} = Bus_{GenCap}$  
 $Bus_{GenCap} = 8000.0 MW$  
 $Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
@@ -525,13 +384,13 @@ $35,000\text{ MW}$
 $line_{snom} = 5,000\text{ MW}$  
 $c_g = marginal cost (USD/MWh) = 50.00$  
 
-#### LMP Spread (`lmp_spread`)::Test Case 3 A: Expected Results
+#### LMP Spread (`lmp_spread`) Probe::Test Case 3 A: Expected Results
 $Operating Cost = \{Total System Load * c_g\}$  
 $=\{35,000 *50\} = USD\text{ 1,750,000}$  
 
-#### LMP Spread (`lmp_spread`)::Test Case 3 A: Results
+#### LMP Spread (`lmp_spread`) Probe::Test Case 3 A: Results
 
-**Output Path:** `./stress_out/Commit C4`
+**Output Path:** `./stress_out/Commit C*`
 
 | Commit | Scenario | Objective (USD) | LMP Spread | Max Loading (p.u.) | Near-Binding Constraints | k (First Near-Bind) |
 |--------|----------|-----------------|------------|-------------------|--------------------------|---------------------|
@@ -539,7 +398,7 @@ $=\{35,000 *50\} = USD\text{ 1,750,000}$
 
 ---
 
-##### ASR-DASH — Commit `c4` (single): Run Configuration
+##### ASR-DASH — Commit `c*` (single): Run Configuration
 
 | Parameter | Value                                                                                                                                                       |
 | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -640,6 +499,7 @@ i.e.
 $F^{max}_{WECC_SW \rightarrow SPP_MISO} = 5000\text{ MW}$  
 i.e.  
 * WECC_SW is exporting **at full line capacity**  
+
 ---
 
 **DC OPF Power Balance Equations:**  
@@ -723,166 +583,15 @@ PTDF Intuition:
 
 ---
 
-**Key takeaway (lock this in):**  
+##### LMP Spread (`lmp_spread`) Probe::Test Case 3 A: Objective & Key takeaway
+- Assymetric loads alone will not cause LMP spread or shadow pricing
+  - Test Case 3 A: Results::LMP Spread = 0.000
 > **Congestion creates LMP spread only when a binding line has a non-zero PTDF between two buses *and* the marginal costs differ across that cut.**
+> 
 
 ---
 
-#### LMP Spread (`lmp_spread`)::Test Case 3 B: Conditions
-$Bus_{Load} = Bus_{GenCap}$  
-$Bus_{GenCap} = 8000.0 MW$  
-$Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
-
-$WECC_NW_{LoadStressFactor} = WECC_NW_{Load}/Bus_{GenCap} = 1.0$  
-$WECC_NW_{Load} = 5000.0\text{ MW}$  
-
-$WECC_SW_{LoadStressFactor} = WECC_SW_{Load}/Bus_{GenCap} = 1.0$  
-$WECC_SW_{Load} = 5000.0\text{ MW}$  
-
-$SPP_MISO_{LoadStressFactor} = SPP_MISO_{Load}/Bus_{GenCap} = 1.0$  
-$SPP_MISO_{Load} = 5000.0\text{ MW}$  
-
-$PJM_NE_{LoadStressFactor} = PJM_NE_{Load}/Bus_{GenCap} = 2.0$  
-$PJM_NE_{Load} = 10000.0\text{ MW}$  
-
-$SERC_SE_{LoadStressFactor} = SERC_SE_{Load}/Bus_{GenCap} = 1.0$  
-$SERC_SE_{Load} = 5000.0\text{ MW}$  
-
-$ERCOT_{LoadStressFactor} = ERCOT_{Load}/Bus_{GenCap} = 1.0$  
-$ERCOT_{Load} = 5000.0\text{ MW}$  
-
-$Total System Load = \{$  
-$WECC_NW_{Load} + WECC_SW_{Load} + SPP_MISO_{Load} + $  
-$PJM_NE_{Load} + SERC_SE_{Load} + ERCOT_{Load}$  
-$\}\text{ MW} = $  
-$\{5000.0 + 5000.0 + 5000.0 + 10000.0 + 5000.0 + 5000.0\}$  
-$35,000\text{ MW}$  
-
-$line_{snom} = 5,000\text{ MW}$  
-$c_g = marginal cost (USD/MWh) = 50.00$  
-
-k_line= {"L_SPP_MISO_PJM_NE": 0.9}  
-$\text{L\_SPP\_MISO\_PJM\_NE} = 0.9 * \{line_{snom} = 5,000\} = 4,500\text{ MW}$  
-
-#### LMP Spread (`lmp_spread`)::Test Case 3 B: Expected Results
-$Operating Cost = \{Total System Load * c_g\}$  
-$=\{35,000 *50\} = USD\text{ 1,750,000}$  
-
-#### LMP Spread (`lmp_spread`)::Test Case 3 B: Results
-
-**Output Path:** `./stress_out/Commit C5`
-
-| Commit | Scenario | Objective (USD) | LMP Spread | Max Loading (p.u.) | Near-Binding Constraints | k (First Near-Bind) |
-|--------|----------|-----------------|------------|-------------------|--------------------------|---------------------|
-| c5     | single   | 1.750e+06       | 0.000      | 0.000             | 1                        | 
-
----
-
-#### LMP Spread (`lmp_spread`)::Test Case 3 C: Conditions
-$Bus_{Load} = Bus_{GenCap}$  
-$Bus_{GenCap} = 8000.0 MW$  
-$Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
-
-$WECC_NW_{LoadStressFactor} = WECC_NW_{Load}/Bus_{GenCap} = 1.0$  
-$WECC_NW_{Load} = 5000.0\text{ MW}$  
-
-$WECC_SW_{LoadStressFactor} = WECC_SW_{Load}/Bus_{GenCap} = 1.0$  
-$WECC_SW_{Load} = 5000.0\text{ MW}$  
-
-$SPP_MISO_{LoadStressFactor} = SPP_MISO_{Load}/Bus_{GenCap} = 1.0$  
-$SPP_MISO_{Load} = 5000.0\text{ MW}$  
-
-$PJM_NE_{LoadStressFactor} = PJM_NE_{Load}/Bus_{GenCap} = 2.0$  
-$PJM_NE_{Load} = 10000.0\text{ MW}$  
-
-$SERC_SE_{LoadStressFactor} = SERC_SE_{Load}/Bus_{GenCap} = 1.0$  
-$SERC_SE_{Load} = 5000.0\text{ MW}$  
-
-$ERCOT_{LoadStressFactor} = ERCOT_{Load}/Bus_{GenCap} = 1.0$  
-$ERCOT_{Load} = 5000.0\text{ MW}$  
-
-$Total System Load = \{$  
-$WECC_NW_{Load} + WECC_SW_{Load} + SPP_MISO_{Load} + $  
-$PJM_NE_{Load} + SERC_SE_{Load} + ERCOT_{Load}$  
-$\}\text{ MW} = $  
-$\{5000.0 + 5000.0 + 5000.0 + 10000.0 + 5000.0 + 5000.0\}$  
-$35,000\text{ MW}$  
-
-$line_{snom} = 5,000\text{ MW}$  
-$c_g = marginal cost (USD/MWh) = 50.00$  
-
-k_line= {"L_SPP_MISO_PJM_NE": 0.8}  
-$\text{L\_SPP\_MISO\_PJM\_NE} = 0.8 * \{line_{snom} = 5,000\} = 4,000\text{ MW}$  
-
-#### LMP Spread (`lmp_spread`)::Test Case 3 C: Expected Results
-$Operating Cost = \{Total System Load * c_g\}$  
-$=\{35,000 *50\} = USD\text{ 1,750,000}$  
-
-#### LMP Spread (`lmp_spread`)::Test Case 3 C: Results
-
-**Output Path:** `./stress_out/Commit C6`
-
-| Commit | Scenario | Objective (USD) | LMP Spread | Max Loading (p.u.) | Near-Binding Constraints | k (First Near-Bind) |
-|--------|----------|-----------------|------------|-------------------|--------------------------|---------------------|
-| c6     | single   | 1.750e+06       | 0.000      | 0.000             | 2                        | 
-
----
-
-#### LMP Spread (`lmp_spread`)::Test Case 3 D: Conditions
-$Bus_{Load} = Bus_{GenCap}$  
-$Bus_{GenCap} = 8000.0 MW$  
-$Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
-
-$WECC_NW_{LoadStressFactor} = WECC_NW_{Load}/Bus_{GenCap} = 1.0$  
-$WECC_NW_{Load} = 5000.0\text{ MW}$  
-
-$WECC_SW_{LoadStressFactor} = WECC_SW_{Load}/Bus_{GenCap} = 1.0$  
-$WECC_SW_{Load} = 5000.0\text{ MW}$  
-
-$SPP_MISO_{LoadStressFactor} = SPP_MISO_{Load}/Bus_{GenCap} = 1.0$  
-$SPP_MISO_{Load} = 5000.0\text{ MW}$  
-
-$PJM_NE_{LoadStressFactor} = PJM_NE_{Load}/Bus_{GenCap} = 2.0$  
-$PJM_NE_{Load} = 10000.0\text{ MW}$  
-
-$SERC_SE_{LoadStressFactor} = SERC_SE_{Load}/Bus_{GenCap} = 1.0$  
-$SERC_SE_{Load} = 5000.0\text{ MW}$  
-
-$ERCOT_{LoadStressFactor} = ERCOT_{Load}/Bus_{GenCap} = 1.0$  
-$ERCOT_{Load} = 5000.0\text{ MW}$  
-
-$Total System Load = \{$  
-$WECC_NW_{Load} + WECC_SW_{Load} + SPP_MISO_{Load} + $  
-$PJM_NE_{Load} + SERC_SE_{Load} + ERCOT_{Load}$  
-$\}\text{ MW} = $  
-$\{5000.0 + 5000.0 + 5000.0 + 10000.0 + 5000.0 + 5000.0\}$  
-$35,000\text{ MW}$  
-
-$line_{snom} = 5,000\text{ MW}$  
-$c_g = marginal cost (USD/MWh) = 50.00$  
-
-k_line= {  
-    "L_WECC_NW_WECC_SW": 1.0, "L_WECC_SW_SPP_MISO": 1.0, "L_SPP_MISO_ERCOT": 0.8,  
-    "L_SPP_MISO_PJM_NE": 0.8, "L_PJM_NE_SERC_SE": 0.8, "L_SERC_SE_ERCOT": 0.8  
-        }  
-$line_{snom} = 5000$  
-$line_{effectiveCap} = 0.8 * 5,000 = 4,000\text{ MW}$ 
-
-#### LMP Spread (`lmp_spread`)::Test Case 3 D: Expected Results
-$Operating Cost = \{Total System Load * c_g\}$  
-$=\{35,000 *50\} = USD\text{ 1,750,000}$  
-
-#### LMP Spread (`lmp_spread`)::Test Case 3 D: Results
-
-**Output Path:** `./stress_out/Commit C7`
-
-| Commit | Scenario | Objective (USD) | LMP Spread | Max Loading (p.u.) | Near-Binding Constraints | k (First Near-Bind) |
-|--------|----------|-----------------|------------|-------------------|--------------------------|---------------------|
-| c7     | single   | 1.750e+06       | 0.000      | 0.000             | 3                        | 
-
----
-
-#### LMP Spread (`lmp_spread`)::Test Case 3 E: Conditions
+#### LMP Spread (`lmp_spread`) Probe::Test Case 3 B: Conditions
 $Bus_{Load} = Bus_{GenCap}$  
 $Bus_{GenCap} = 8000.0 MW$  
 $Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
@@ -927,7 +636,7 @@ mc_bus = {
   "SPP_MISO": 50.0
 }
 
-**ASR- Note:** Optiona mc_bus values to trigger LMP_Spread 
+**ASR- Note:** Optional mc_bus values to trigger LMP_Spread 
 mc_bus = {
   "WECC_NW": 40.0,
   "WECC_SW": 45.0,
@@ -937,7 +646,7 @@ mc_bus = {
   "ERCOT": 60.0
 }
 
-#### LMP Spread (`lmp_spread`)::Test Case 3 E: Expected Results
+#### LMP Spread (`lmp_spread`) Probe::Test Case 3 B: Expected Results
 $Total System Load = \{$  
 $WECC_NW_{Load} + WECC_SW_{Load} + SPP_MISO_{Load} +$  
 $PJM_NE_{Load} + SERC_SE_{Load} + ERCOT_{Load}\}\text{ MW} =$  
@@ -955,7 +664,7 @@ $\{55 * 10000\} + \{50 * 5000\} + \{50 * 5000\}\} =$
 $= USD\text{ 1,800,000}$  
 
 **ASR- TODO>>DONE:**  
-##### Explantion: LMP_Spread trigger with Scarcity pricing 
+##### LMP Spread (`lmp_spread`) Probe::Test Case 3 B: Explantion: LMP_Spread trigger with Scarcity pricing 
 **LMP Spread Triggers:**
 For LMPs to separate, both the must occur:
 * A bus **cannot meet its load locally**, and
@@ -975,9 +684,9 @@ For LMPs to separate, both the must occur:
 * In a DC OPF, congestion creates price separation only when it forces a bus to use a higher-cost marginal resource.
 * With uniform marginal costs, LMP spread is mathematically impossible — no matter how congested the network is.
 
-#### LMP Spread (`lmp_spread`)::Test Case 3 E: Results
+#### LMP Spread (`lmp_spread`) Probe::Test Case 3 B: Results
 
-**Output Path:** `./stress_out/Commit C8`
+**Output Path:** `./stress_out/Commit C*`
 
 | Commit | Scenario | Objective (USD) | LMP Spread | Max Loading (p.u.) | Near-Binding Constraints | k (First Near-Bind) |
 |--------|----------|-----------------|------------|-------------------|--------------------------|---------------------|
@@ -985,7 +694,7 @@ For LMPs to separate, both the must occur:
 
 ---
 
-##### ASR-DASH — Commit `c8` (single): Run Configuration
+##### ASR-DASH — Commit `c*` (single): Run Configuration
 
 | Parameter | Value                                                                                                                                                       |
 | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1020,7 +729,7 @@ For LMPs to separate, both the must occur:
 **ASR- TODO>>DONE:**  
 Compute/Check Objective value of 1.760e+06  
 
-##### Explanation: Operating Cost with LMP Spread
+##### Calculations: Operating Cost with LMP Spread
 Calculated value from above:  $Operating Cost = \{$  
 $\{50 * 5000\} + \{50 * 5000\} + \{50 * 5000\} +$  
 $\{55 * 10000\} + \{50 * 5000\} + \{50 * 5000\}\} =$  
@@ -1060,7 +769,7 @@ Operating cost of Non Premium Load: $OPCost_{NPL} = \{50 * 33000\} = \$1,650,000
 $OPCost_{PL} + OPCost_{NPL} = 110,000 + 1,650,000 = \$1,760,000$  
 
 ##### DC OPF power balance equation evaluation [TBC]
-DC OPF power balance equations for test case 3 E w/ solver feasible DC OPF power flow:
+DC OPF power balance equations for test case 3 B w/ solver feasible DC OPF power flow:
   * Loading (p.u.):
     * L_WECC_SW_SPP_MISO: 1.0
     * L_SPP_MISO_PJM_NE: 1.0
@@ -1151,7 +860,7 @@ Extensive probing/testing of DevNet Stress Test::LMP Spread (`lmp_spread`)::Test
 >   Similarly: by de-rating k_line sequentially we can see the near binding constraint count result by the solver change. There is an evident direct correlation.  
 
 >   However with LMP spread, re-verse engineering the DC OPF balance from the solver most >   stressed lines is a lot more complex.  
->   Is this fundamentally because of hte iterative nature of the solver i.e. fundamental to >   Linear Programming?  
+>   Is this fundamentally because of the iterative nature of the solver i.e. fundamental to >   Linear Programming?  
 
 
 **Yes — fundamentally. Pin-point reason:**  
@@ -1176,103 +885,346 @@ Yes, you can plot per case. For each case you will be able to record and plot:
 - top_lines (most stressed lines)
 
 #### DevNet Stress Test::LMP Spread (`lmp_spread`)::Test Case 4
-Refer:  
+Base Replication Reference:  
 - [DevNet Stress Report_5.html](./DevNet%20Stress%20Report_5.html)  
 - Commit ID: [1,... 10]
+- Refer test case sequence @[devnet_plots.xlsx](./devnet_plots.xlsx)
 
-**Test Plan cases:**  
-1: mc_bus = {
-  "WECC_NW": 50.0,
-  "WECC_SW": 50.0,
-  "SPP_MISO": 50.0,
-  "PJM_NE": 60.0,
-  "SERC_SE": 50.0,
-  "ERCOT": 50.0
-}  
+---
 
-2: mc_bus = {
-  "WECC_NW": 70.0,
-  "WECC_SW": 70.0,
-  "SPP_MISO": 70.0,
-  "PJM_NE": 60.0,
-  "SERC_SE": 70.0,
-  "ERCOT": 70.0
-}  $$
+##### DevNet Stress Test::LMP Spread (`lmp_spread`)::Test Case 4: Conditons
+$Bus_{Load} = Bus_{GenCap}$  
+$Bus_{GenCap} = 8000.0 MW$  
+$Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
 
-3: mc_bus = {
-  "WECC_NW": 70.0,
-  "WECC_SW": 70.0,
-  "SPP_MISO": 50.0,
-  "PJM_NE": 60.0,
-  "SERC_SE": 70.0,
-  "ERCOT": 70.0
-}  
+$WECC_NW_{LoadStressFactor} = WECC_NW_{Load}/Bus_{GenCap} = 1.0$  
+$WECC_NW_{Load} = 5000.0\text{ MW}$  
 
-4: mc_bus = {
-  "WECC_NW": 70.0,
-  "WECC_SW": 50.0,
-  "SPP_MISO": 70.0,
-  "PJM_NE": 60.0,
-  "SERC_SE": 70.0,
-  "ERCOT": 70.0
-}  
+$WECC_SW_{LoadStressFactor} = WECC_SW_{Load}/Bus_{GenCap} = 1.0$  
+$WECC_SW_{Load} = 5000.0\text{ MW}$  
 
-5: mc_bus = {
-  "WECC_NW": 50.0,
-  "WECC_SW": 70.0,
-  "SPP_MISO": 70.0,
-  "PJM_NE": 60.0,
-  "SERC_SE": 70.0,
-  "ERCOT": 70.0
-}  
+$SPP_MISO_{LoadStressFactor} = SPP_MISO_{Load}/Bus_{GenCap} = 1.0$  
+$SPP_MISO_{Load} = 5000.0\text{ MW}$  
 
-6: mc_bus = {
-  "WECC_NW": 70.0,
-  "WECC_SW": 70.0,
-  "SPP_MISO": 70.0,
-  "PJM_NE": 60.0,
-  "SERC_SE": 50.0,
-  "ERCOT": 70.0
-}  
+$PJM_NE_{LoadStressFactor} = PJM_NE_{Load}/Bus_{GenCap} = 2.0$  
+$PJM_NE_{Load} = 10000.0\text{ MW}$  
 
-7: mc_bus = {
-  "WECC_NW": 70.0,
-  "WECC_SW": 70.0,
-  "SPP_MISO": 70.0,
-  "PJM_NE": 60.0,
-  "SERC_SE": 70.0,
-  "ERCOT": 50.0
-}  
+$SERC_SE_{LoadStressFactor} = SERC_SE_{Load}/Bus_{GenCap} = 1.0$  
+$SERC_SE_{Load} = 5000.0\text{ MW}$  
 
-8: mc_bus = {
-  "WECC_NW": 50.0,
-  "WECC_SW": 50.0,
-  "SPP_MISO": 50.0,
-  "PJM_NE": 60.0,
-  "SERC_SE": 70.0,
-  "ERCOT": 70.0
-}  
+$ERCOT_{LoadStressFactor} = ERCOT_{Load}/Bus_{GenCap} = 1.0$  
+$ERCOT_{Load} = 5000.0\text{ MW}$  
 
-9: mc_bus = {
-  "WECC_NW": 70.0,
-  "WECC_SW": 50.0,
-  "SPP_MISO": 50.0,
-  "PJM_NE": 60.0,
-  "SERC_SE": 70.0,
-  "ERCOT": 70.0
-}  
+$Total System Load = \{$  
+$WECC_NW_{Load} + WECC_SW_{Load} + SPP_MISO_{Load} +$  
+$PJM_NE_{Load} + SERC_SE_{Load} + ERCOT_{Load}$  
+$\}\text{ MW} =$  
+$\{5000.0 + 5000.0 + 5000.0 + 10000.0 + 5000.0 + 5000.0\}$  
+$35,000\text{ MW}$  
 
-10: mc_bus = {
-  "WECC_NW": 50.0,
-  "WECC_SW": 50.0,
-  "SPP_MISO": 50.0,
-  "PJM_NE": 60.0,
-  "SERC_SE": 50.0,
-  "ERCOT": 70.0
-}  
+$line_{snom} = 5,000\text{ MW}$  
+$c_g = marginal cost (USD/MWh) = 50.00$  
+
+---
+
+##### DevNet Stress Test::LMP Spread (`lmp_spread`)::Test Case 4: Cases
+**Test Plan cases:** Varying per bus generation marginal cost:  
+Test case 1, Commit C7:  
+  1: mc_bus = {
+    "WECC_NW": 70.0,
+    "WECC_SW": 70.0,
+    "SPP_MISO": 70.0,
+    "PJM_NE": 60.0,
+    "SERC_SE": 70.0,
+    "ERCOT": 50.0
+  }  
+
+Test case 2, Commit C6:  
+  2: mc_bus = {
+    "WECC_NW": 70.0,
+    "WECC_SW": 70.0,
+    "SPP_MISO": 70.0,
+    "PJM_NE": 60.0,
+    "SERC_SE": 50.0,
+    "ERCOT": 70.0
+  }  
+
+Test case 3, Commit C2:  
+  3: mc_bus = {
+    "WECC_NW": 70.0,
+    "WECC_SW": 70.0,
+    "SPP_MISO": 70.0,
+    "PJM_NE": 60.0,
+    "SERC_SE": 70.0,
+    "ERCOT": 70.0
+  }
+
+Test case 4, Commit C3:  
+  4: mc_bus = {
+    "WECC_NW": 70.0,
+    "WECC_SW": 70.0,
+    "SPP_MISO": 50.0,
+    "PJM_NE": 60.0,
+    "SERC_SE": 70.0,
+    "ERCOT": 70.0
+  }  
+
+Test case 5, Commit C5:  
+  5: mc_bus = {
+    "WECC_NW": 50.0,
+    "WECC_SW": 70.0,
+    "SPP_MISO": 70.0,
+    "PJM_NE": 60.0,
+    "SERC_SE": 70.0,
+    "ERCOT": 70.0
+  }
+
+Test case 6, Commit C4:  
+  6: mc_bus = {
+    "WECC_NW": 70.0,
+    "WECC_SW": 50.0,
+    "SPP_MISO": 70.0,
+    "PJM_NE": 60.0,
+    "SERC_SE": 70.0,
+    "ERCOT": 70.0
+  }
+
+Test case 7, Commit C9:  
+  7: mc_bus = {
+    "WECC_NW": 70.0,
+    "WECC_SW": 50.0,
+    "SPP_MISO": 50.0,
+    "PJM_NE": 60.0,
+    "SERC_SE": 70.0,
+    "ERCOT": 70.0
+  }  
+
+Test case 8, Commit C1:  
+  8: mc_bus = {
+    "WECC_NW": 50.0,
+    "WECC_SW": 50.0,
+    "SPP_MISO": 50.0,
+    "PJM_NE": 60.0,
+    "SERC_SE": 50.0,
+    "ERCOT": 50.0
+  }
+
+Test case 9, Commit C10:  
+  9: mc_bus = {
+    "WECC_NW": 50.0,
+    "WECC_SW": 50.0,
+    "SPP_MISO": 50.0,
+    "PJM_NE": 60.0,
+    "SERC_SE": 50.0,
+    "ERCOT": 70.0
+  }
+
+Test case 10, Commit C8:  
+  10: mc_bus = {
+    "WECC_NW": 50.0,
+    "WECC_SW": 50.0,
+    "SPP_MISO": 50.0,
+    "PJM_NE": 60.0,
+    "SERC_SE": 70.0,
+    "ERCOT": 70.0
+  }
+
+--- 
 
 ##### DevNet Stress Test::LMP Spread (`lmp_spread`)::Test Case 4: Results
 **Refer:** [devnet_plots.xlsx:DevNetGen_mc<>LMP](devnet_plots.xlsx)  
+
+---
+
+### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Plan
+Run each of Test case 8, 9 & 10 @ [LMP Spread (`lmp_spread`)::Test Case 4](#devnet-stress-testlmp-spread-lmp_spreadtest-case-4) for datacenter byog fraction::
+dc_frac      | 0.0 ; 0.25 ; 0.5   
+and observe LMP_Spread
+
+---
+
+#### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5
+Base Replication Reference:  
+- [DCbyogDevNetStressReport.html](./DCbyogDevNetStressReport.html)  
+  - Commit ID: [15,... 18]
+  - Commit ID: [19,... 22]
+
+**ASR-Note:**  
+Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5 commit references at:  
+- [pypsa-zn\devnetDC-sld-15Apr2026\stress_out](../devnetDC-sld-15Apr2026/stress_out/index.html)  
+
+---
+
+#### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5: Conditions
+$Bus_{Load} = Bus_{GenCap}$  
+$Bus_{GenCap} = 8000.0 MW$  
+$Total Generation Capacity = Buses_N * Bus_{GenCap} = 6 * 8000 = 48,000\text{ MW}$  
+
+$WECC_NW_{LoadStressFactor} = WECC_NW_{Load}/Bus_{GenCap} = 1.0$  
+$WECC_NW_{Load} = 5000.0\text{ MW}$  
+
+$WECC_SW_{LoadStressFactor} = WECC_SW_{Load}/Bus_{GenCap} = 1.0$  
+$WECC_SW_{Load} = 5000.0\text{ MW}$  
+
+$SPP_MISO_{LoadStressFactor} = SPP_MISO_{Load}/Bus_{GenCap} = 1.0$  
+$SPP_MISO_{Load} = 5000.0\text{ MW}$  
+
+$PJM_NE_{LoadStressFactor} = PJM_NE_{Load}/Bus_{GenCap} = 2.0$  
+$PJM_NE_{Load} = 10000.0\text{ MW}$  
+
+$SERC_SE_{LoadStressFactor} = SERC_SE_{Load}/Bus_{GenCap} = 1.0$  
+$SERC_SE_{Load} = 5000.0\text{ MW}$  
+
+$ERCOT_{LoadStressFactor} = ERCOT_{Load}/Bus_{GenCap} = 1.0$  
+$ERCOT_{Load} = 5000.0\text{ MW}$  
+
+$Total System Load = \{$  
+$WECC_NW_{Load} + WECC_SW_{Load} + SPP_MISO_{Load} +$  
+$PJM_NE_{Load} + SERC_SE_{Load} + ERCOT_{Load}$  
+$\}\text{ MW} =$  
+$\{5000.0 + 5000.0 + 5000.0 + 10000.0 + 5000.0 + 5000.0\}$  
+$35,000\text{ MW}$  
+
+$line_{snom} = 5,000\text{ MW}$  
+
+$c_g = marginal cost (USD/MWh) = 50.00$  
+mc_bus = {
+    "WECC_NW": 50.0,
+    "WECC_SW": 50.0,
+    "SPP_MISO": 50.0,
+    "PJM_NE": 60.0,
+    "SERC_SE": 50.0,
+    "ERCOT": 50.0
+  }
+
+---
+
+#### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5: Cases
+**Test Plan cases:** Varying per dc_byog generation & marginal cost:  
+Base Replication Reference:  
+- [DCbyogDevNetStressReport.html](./DCbyogDevNetStressReport.html)  
+
+---
+
+##### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case[byog competes]
+**ρ → ∞: The BTM generation rivals the generation available from the grid on the zonal bus** 
+- Commit ID: [15,... 18]
+
+**Test case 1, Commit C15:** 
+  * k_load={"PJM_NE": 3.0} 
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=CSV Preset::2000.0  
+**Result Summary:**  
+    * objective        : nan
+    * lmp_spread       : nan   max_lmp: nan @ 
+
+**Test case 2, Commit C16:**  
+  * k_load={"PJM_NE": 3.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4000.0   
+**Result Summary:**  
+    * objective        : 2.353e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE 
+
+**Test case 3, Commit C17:**  
+  * k_load={"PJM_NE": 3.0} 
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4000.0   
+**Result Summary:**  
+    * objective        : 2.413e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE 
+
+**Test case 4, Commit C18:**  
+  * k_load={"PJM_NE": 3.0} 
+  * byog_mc=80.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4000.0   
+**Result Summary:**  
+    * objective        : 2.480e+06
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE 
+
+##### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Observations[byog competes]
+**Observing Test case 1 - 4 above:**  
+As dc_p_nom increases, datacenter byog brings the gird out of in-feasibilty (objective : nan) to where actually the datacenter starts to make profit and compete with the grid generation (byog_mc=80.0).  
+
+**Key Takeaways:**
+* DC BYOG can materially improve grid resilience / adequacy under stressed conditions
+* DC competes, positively supports the grid by:
+  * Adequacy / resilience support first, congestion-price relief second.
+---
+
+##### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case[byog complements]
+**ρ ≈ 1: BTM resource is viable for dispatch, Unit Committed (UC) to meet grid demand** 
+- Commit ID: [19,... 22]
+
+**Test case 1, Commit C19:**  
+  * k_load={"PJM_NE": 2.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=2500.0  
+**Result Summary:**  
+    * objective        : 1.956e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE 
+
+**Test case 2, Commit C20:**  
+  * k_load={"PJM_NE": 2.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=3000.0  
+**Result Summary:**  
+    * objective        : 1.948e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE 
+
+**Test case 3, Commit C21:**  
+  * k_load={"PJM_NE": 2.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4000.0   
+**Result Summary:**  
+    * objective        : 1.933e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE 
+
+**Test case 4, Commit C22:**  
+  * k_load={"PJM_NE": 2.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4500.0   
+**Result Summary:**  
+    * objective        : 1.928e+06
+    * lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW 
+
+##### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Observations[byog complements]
+**Observing Test case 1 - 4 above:**  
+As dc_p_nom increases, && if byog_mc=45.0, is lower than the electricty cost net of LMP at the bus, the datacenter byog starts to lower system cost:  
+* objective : 1.956e+06 down to 1.928e+06
+And at a high enough dc_p_nom=4500.0: 
+* Reduces LMP Spread on the bus node to [lmp_spread : 0.000]
+
+**Key Questions/Takeaways:**
+**Question 1:**  
+**Is the datacenter seeing cost of supply from the grid including LMP spread?**  
+
+**Answer:**  
+**Yes** — DC pays **nodal LMP at PJM_NE**, which includes congestion component.  
+
+---
+
+**Question 2:**  
+**Under what circumstances will a datacenter be motivated to have higher generation capacity than needed on site?**  
+
+**Answer:**
+* Reliability / uptime guarantees
+* Hedging against high/volatile LMP
+* Revenue from surplus export (if allowed)
+* Participation in capacity / ancillary markets
+* Build-ahead for future load growth
+
+---
+
+**Question 3:**  
+**What conditions lead to `byog_mc < grid_mc`?**  
+
+**Answer:**
+* Low-cost fuel (gas contracts, waste heat, etc.)
+* Renewable + storage stack (solar + battery)
+* Long Duration Energy Storage (LDES) arbitrage
+* Behind-the-meter PPAs / fixed price supply
+* Avoided transmission / congestion costs
+
+---
+
+**Summary takeaway:**  
+```text
+ρ ≈ 1 = BYOG economically viable AND partially system-relevant,
+but not yet dominant grid supplier
+```
 
 ---
 
@@ -1282,6 +1234,15 @@ Refer:
 
 - chatGPT: Zeronode.ca > PyPSA overview::  
   [PyPSA Ramp & Dev3](https://chatgpt.com/g/g-p-6857abd95a648191886783a41ba46a15/c/6972f266-e858-832e-b4d8-ec7ed137bbfc)  
+
+- chatGPT: Zeronode.ca > PyPSA overview::  
+  [PyPSA Ramp & Dev3](https://chatgpt.com/g/g-p-6857abd95a648191886783a41ba46a15/c/6972f266-e858-832e-b4d8-ec7ed137bbfc)  
+
+- chatGPT: Zeronode.ca > PyPSA overview::  
+  [PyPSA Ramp & Dev4](https://chatgpt.com/g/g-p-6857abd95a648191886783a41ba46a15/c/697a6437-af9c-8320-aa69-6b42cc0cb940)  
+
+- chatGPT: Zeronode.ca > PyPSA overview::  
+  [PyPSA Ramp & Dev5](https://chatgpt.com/g/g-p-683f3015f8d08191b484e272d6a9ba13/c/69aa3182-4a04-8324-91b8-3989afaee97d)  
 
 ---
 

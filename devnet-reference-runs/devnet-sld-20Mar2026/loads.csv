@@ -1,0 +1,7 @@
+name,bus,carrier,p_set
+Load_WECC_NW,WECC_NW,load,5000.0
+Load_WECC_SW,WECC_SW,load,5000.0
+Load_SPP_MISO,SPP_MISO,load,5000.0
+Load_PJM_NE,PJM_NE,load,5000.0
+Load_SERC_SE,SERC_SE,load,5000.0
+Load_ERCOT,ERCOT,load,5000.0

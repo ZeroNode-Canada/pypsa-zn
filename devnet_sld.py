@@ -1,28 +1,45 @@
-"""
-devnet_sld.py
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright 2025 ZeroNode
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Purpose
-  Build the baseline USA-lite 6-bus DevNet network (SLD) in PyPSA, plot an annotated
-  one-line diagram (buses/lines + generators/loads), and export the network as a CSV folder.
+# devnet_sld.py
+# 
+# Purpose
+#   Build the baseline USA-lite 6-bus DevNet network (SLD) in PyPSA, plot an annotated
+#   one-line diagram (buses/lines + generators/loads), and export the network as a CSV folder.
+# 
+# What it does
+#   - Prompts for DEVNET_NAME and creates per-devnet plots/ and logs/ directories.
+#   - Builds a symmetric 6-bus hexagon topology with 6 intertie lines.
+#   - Adds 1 gas generator + 1 metro load per bus (baseline components) and defines carriers.
+#   - Generates a publication-style SLD plot with bus/line labels + symmetric gen/load overlays.
+#   - Exports the full network (buses/lines/generators/loads/carriers/snapshots/etc.) to DEVNET_BLD_PATH.
+# 
+# Outputs
+#   - DEVNET_BLD_PATH/ (CSV network definition)
+#   - DEVNET_BLD_PATH/plots/<DEVNET_NAME>.png
+#   - DEVNET_BLD_PATH/logs/<DEVNET_NAME>_<TS>.log
 
-What it does
-  - Prompts for DEVNET_NAME and creates per-devnet plots/ and logs/ directories.
-  - Builds a symmetric 6-bus hexagon topology with 6 intertie lines.
-  - Adds 1 gas generator + 1 metro load per bus (baseline components) and defines carriers.
-  - Generates a publication-style SLD plot with bus/line labels + symmetric gen/load overlays.
-  - Exports the full network (buses/lines/generators/loads/carriers/snapshots/etc.) to DEVNET_BLD_PATH.
-
-Outputs
-  - DEVNET_BLD_PATH/ (CSV network definition)
-  - DEVNET_BLD_PATH/plots/<DEVNET_NAME>.png
-  - DEVNET_BLD_PATH/logs/<DEVNET_NAME>_<TS>.log
-"""
 # Run: devnet_sld.py
 
 # Datacenter Network (DevNet) Single Line Diagram (SLD) builder script for PyPSA
 # Baseline DevNet: USA-lite 6-bus SLD with basic components
 # SLC exported as CSVs + plotted SLD diagram
 # Exported CSVs can be re-imported into PyPSA for further modeling/analysis
+
+# Run: devnet_sld.py
 # ------------------------------------------------------------------------------
 
 import os
@@ -33,6 +50,7 @@ import logging
 from datetime import datetime
 import math
 import numpy as np
+import pandas as pd
 
 import matplotlib.pyplot as plt
 import pypsa
@@ -47,6 +65,7 @@ print("PyPSA DevNet Builder Script...\n")
 # ----- Resolve paths next to this script -----
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TS = datetime.now().strftime("%Y%m%d-%H%M%S")
+CONFIG_PATH = os.path.join(SCRIPT_DIR, "devnet_config")
 
 # ------------------------------------------------------------------------------
 #   Helper functions
@@ -54,6 +73,99 @@ TS = datetime.now().strftime("%Y%m%d-%H%M%S")
 def confirm(prompt):
     ans = input(f"{prompt} (Y/N): ").strip().lower()
     return ans in ("y", "yes")
+
+# ------------------------------------------------------------------------------
+# next_devnet_name()
+# Returns next available DevNet build directory name using incremental suffix:
+#   devnet-sld → devnet-sld1 → devnet-sld2 → ...
+#
+# Used to support iterative experiment builds without overwriting prior runs.
+# Ensures:
+#   - No collision with existing directories
+#   - Clean separation of test artifacts across runs
+# ------------------------------------------------------------------------------
+def next_devnet_name(script_dir: str, base_name: str) -> str:
+    """
+    Returns next available suffixed DevNet directory name:
+      devnet-sld  -> devnet-sld1, devnet-sld2, ...
+    """
+    i = 1
+    while True:
+        candidate = f"{base_name}{i}"
+        if not os.path.isdir(os.path.join(script_dir, candidate)):
+            return candidate
+        i += 1
+
+# ------------------------------------------------------------------------------
+# load_devnet_config()
+# Loads and validates user-configurable DevNet CSV inputs from ./devnet_config:
+#
+# Inputs (CSV):
+#   - devnet_buses.csv     → bus definitions (names, coordinates, voltage)
+#   - devnet_lines.csv     → transmission topology and limits (s_nom)
+#   - devnet_assets.csv    → per-bus generation and load parameters
+#   - devnet_dc.csv        → datacenter location and BYOG parameters
+#   - devnet_carriers.csv  → carrier definitions (e.g. gas, load, ac)
+#
+# Validation:
+#   - Enforces 6-bus DevNet constraint
+#   - Ensures all buses have asset definitions
+#   - Verifies line endpoints map to valid buses
+#   - Confirms datacenter bus is valid
+#
+# Returns:
+#   (buses_df, lines_df, assets_df, dc_df, carriers_df)
+#
+# Role:
+#   - Single source of truth for all network parameterization
+#   - Enables full CSV-driven DevNet construction (release-grade workflow)
+# ------------------------------------------------------------------------------
+def load_devnet_config(config_path: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    required_csvs = [
+        "devnet_buses.csv",
+        "devnet_lines.csv",
+        "devnet_assets.csv",
+        "devnet_dc.csv",
+        "devnet_carriers.csv",
+    ]
+
+    missing = [
+        fn for fn in required_csvs
+        if not os.path.exists(os.path.join(config_path, fn))
+    ]
+
+    if missing:
+        raise FileNotFoundError(
+            "Missing DevNet config CSV(s): "
+            + ", ".join(missing)
+            + f"\nRun devnet_cfg.py first, then edit CSVs in:\n{config_path}"
+        )
+
+    buses_df = pd.read_csv(os.path.join(config_path, "devnet_buses.csv"))
+    lines_df = pd.read_csv(os.path.join(config_path, "devnet_lines.csv"))
+    assets_df = pd.read_csv(os.path.join(config_path, "devnet_assets.csv"))
+    dc_df = pd.read_csv(os.path.join(config_path, "devnet_dc.csv"))
+    carriers_df = pd.read_csv(os.path.join(config_path, "devnet_carriers.csv"))
+
+    if len(buses_df) != 6:
+        raise ValueError("DevNet release constraint violated: devnet_buses.csv must define exactly 6 bus nodes.")
+
+    missing_assets = set(buses_df["bus"]) - set(assets_df["bus"])
+    if missing_assets:
+        raise ValueError(f"Missing asset rows for buses: {sorted(missing_assets)}")
+
+    valid_buses = set(buses_df["bus"])
+
+    for _, r in lines_df.iterrows():
+        if r["bus0"] not in valid_buses or r["bus1"] not in valid_buses:
+            raise ValueError(f"Invalid line endpoint in devnet_lines.csv: {r.to_dict()}")
+
+    if not dc_df.empty:
+        dc_bus = str(dc_df.iloc[0]["bus"])
+        if dc_bus not in valid_buses:
+            raise ValueError(f"Invalid datacenter bus in devnet_dc.csv: {dc_bus}")
+
+    return buses_df, lines_df, assets_df, dc_df, carriers_df
 
 # ----------------------------------------------------------------------
 #   Prompt user for DevNet name
@@ -69,12 +181,28 @@ print(f"ASR-DBG::Using DEVNET_NAME::\n\t{DEVNET_NAME}\n")
 # ------------------------------------------------------------------------------
 DEVNET_BLD_PATH = os.path.join(SCRIPT_DIR, DEVNET_NAME)
 DEVNET_BLD_DIR = os.path.basename(DEVNET_BLD_PATH)
-print("ASR-DBG::DEVNET_BLD_PATH::\n\t{0}\n" .format(DEVNET_BLD_PATH))
-# --- Delete existing CSV build folder if present ---
+
+print("ASR-DBG::DEVNET_BLD_PATH::\n\t{0}\n".format(DEVNET_BLD_PATH))
+
+# --- Handle existing CSV build folder ---
 if os.path.isdir(DEVNET_BLD_PATH):
-    print(f"ASR-DBG: Found existing build folder:\n\t{DEVNET_BLD_DIR}")
-    if not confirm(f"ASR-DBG: Keep existing {DEVNET_BLD_DIR}.\n"):
-        print("Manually remove folder and re-run script. Exiting...")
+    print(f"ASR-DBG: Found existing build folder:\n\t{DEVNET_BLD_DIR}\n")
+
+    print("Select build folder action:")
+    print(f"  1) Keep existing folder: {DEVNET_BLD_DIR}")
+    print(f"  2) Create new suffixed folder from base name: {DEVNET_NAME}1, {DEVNET_NAME}2, ...")
+    print("  3) Exit so you can manually delete/clean folders")
+
+    folder_choice = input("Enter choice [1]: ").strip()
+
+    if folder_choice == "2":
+        DEVNET_NAME = next_devnet_name(SCRIPT_DIR, DEVNET_NAME)
+        DEVNET_BLD_PATH = os.path.join(SCRIPT_DIR, DEVNET_NAME)
+        DEVNET_BLD_DIR = os.path.basename(DEVNET_BLD_PATH)
+        print(f"ASR-DBG: Using new build folder:\n\t{DEVNET_BLD_DIR}\n")
+
+    elif folder_choice == "3":
+        print("Manual cleanup selected. Exiting...")
         print(SECTION_SEPARATOR)
         sys.exit(0)
     else:
@@ -155,6 +283,34 @@ print(f"Saving logs to: {LOG_NAME}")
 #   Build DevNet Single Line Diagram (SLD) Network
 # ------------------------------------------------------------------------------
 print(SECTION_SEPARATOR)
+print(f"ASR-DBG::DevNet config path::\n\t{CONFIG_PATH}\n")
+
+# List CSVs present
+if not os.path.isdir(CONFIG_PATH):
+    print("ASR-ERR: devnet_config folder not found.")
+    print("Run devnet_cfg.py first.")
+    sys.exit(0)
+
+csv_files = sorted([f for f in os.listdir(CONFIG_PATH) if f.endswith(".csv")])
+
+if not csv_files:
+    print("ASR-ERR: No CSV files found in devnet_config.")
+    print("Run devnet_cfg.py first.")
+    sys.exit(0)
+
+print("ASR-DBG::CSV files found:")
+for f in csv_files:
+    print(f"\t{f}")
+print("")
+
+if not confirm("Proceed with these CSV inputs?"):
+    print("User aborted. Please update CSVs and re-run.")
+    sys.exit(0)
+
+# Load config
+buses_df, lines_df, assets_df, dc_df, carriers_df = load_devnet_config(CONFIG_PATH)
+print("\nASR-DBG::Loaded CSV config files OK.\n")
+
 print("Build DevNet Single Line Diagram (SLD) in PyPSA…")
 devnet = pypsa.Network()
 
@@ -162,59 +318,78 @@ devnet = pypsa.Network()
 devnet.name = DEVNET_NAME
 print(f"ASR-DBG::DevNet SLD name::\n\t{devnet.name}\n")
 
-# Buses (USA-lite regions) — hexagon in line-chain order
-# Order around the ring:
-# WECC_NW -> WECC_SW -> SPP_MISO -> PJM_NE -> SERC_SE -> ERCOT -> back to WECC_NW
-R = 10.0
-buses = {
-    "WECC_NW":  ( R,  0.0),           # 0°  (right)
-    "WECC_SW":  ( R/2, -0.866*R),     # -60°
-    "SPP_MISO": (-R/2, -0.866*R),     # -120°
-    "PJM_NE":   (-R,  0.0),           # 180° (left)
-    "SERC_SE":  (-R/2,  0.866*R),     # 120°
-    "ERCOT":    ( R/2,  0.866*R),     # 60°
-}
-for name, (x, y) in buses.items():
-    devnet.add("Bus", name, x=x, y=y, v_nom=345, carrier="ac")
+# Buses from CSV — exactly 6 nodes required
+buses = {}
 
-# Simple interties (lines) – this is your one-line structure
-lines = [
-    ("L_WECC_NW_WECC_SW", "WECC_NW", "WECC_SW"),
-    ("L_WECC_SW_SPP_MISO", "WECC_SW", "SPP_MISO"),
-    ("L_SPP_MISO_ERCOT", "SPP_MISO", "ERCOT"),
-    ("L_SPP_MISO_PJM_NE", "SPP_MISO", "PJM_NE"),
-    ("L_PJM_NE_SERC_SE", "PJM_NE", "SERC_SE"),
-    ("L_SERC_SE_ERCOT", "SERC_SE", "ERCOT"),
-]
-for name, b0, b1 in lines:
-    devnet.add("Line", name, bus0=b0, bus1=b1, x=0.1, r=0.01, s_nom=5000, carrier="ac")
+for _, r in buses_df.iterrows():
+    name = str(r["bus"])
+    x = float(r["x"])
+    y = float(r["y"])
+    buses[name] = (x, y)
+
+    devnet.add(
+        "Bus",
+        name,
+        x=x,
+        y=y,
+        v_nom=float(r.get("v_nom", 345)),
+        carrier=str(r.get("carrier", "ac")),
+    )
+
+# Transmission lines from CSV
+lines = []
+
+for _, r in lines_df.iterrows():
+    name = str(r["line"])
+    b0 = str(r["bus0"])
+    b1 = str(r["bus1"])
+    lines.append((name, b0, b1))
+
+    devnet.add(
+        "Line",
+        name,
+        bus0=b0,
+        bus1=b1,
+        x=float(r.get("x", 0.1)),
+        r=float(r.get("r", 0.01)),
+        s_nom=float(r["s_nom"]),
+        carrier=str(r.get("carrier", "ac")),
+    )
+
 print("ASR-DBG::SLD buses::\n\t{0}\n" .format(buses))
 print("ASR-DBG::SLD lines::\n\t{0}\n" .format(lines))
 
 # ----------------------------------------------------------------------
 #   Add 1 generator + 1 load per bus (baseline: gas gen, metro load)
 # ----------------------------------------------------------------------
-# Define carriers for generators and loads
-devnet.add("Carrier", "gas", co2_emissions=0.19)   # tCO2/MWh (example)
-devnet.add("Carrier", "load")
-devnet.add("Carrier", "ac")
+# Carrier definitions from CSV
+for _, r in carriers_df.iterrows():
+    devnet.add(
+        "Carrier",
+        str(r["carrier"]),
+        co2_emissions=float(r.get("co2_emissions", 0.0)),
+    )
 
-for b in devnet.buses.index:
+for _, r in assets_df.iterrows():
+    b = str(r["bus"])
+
     devnet.add(
         "Generator",
         f"Gen_{b}",
         bus=b,
         carrier="gas",
-        p_nom=8000.0,
-        marginal_cost=50.0,
+        p_nom=float(r["gen_p_nom"]),
+        marginal_cost=float(r["gen_mc"]),
     )
+
     devnet.add(
         "Load",
         f"Load_{b}",
         bus=b,
         carrier="load",
-        p_set=5000.0,
+        p_set=float(r["load_p_set"]),
     )
+
 print("ASR-DBG::SLD carriers::\n\t{0}\n".format(devnet.carriers.index.tolist()))
 print("ASR-DBG::SLD generators::\n\t{0}\n" .format(devnet.generators.index.tolist()))
 print("ASR-DBG::SLD loads::\n\t{0}\n" .format(devnet.loads.index.tolist()))
@@ -309,7 +484,7 @@ ax = fig.add_subplot(gs[1])
 devnet.plot.map(
     ax=ax,
     geomap=False,
-    bus_sizes=0.4,
+    bus_sizes=0.55,
     bus_colors="tab:blue",
     line_widths=2.0,
 )
@@ -378,16 +553,30 @@ def radial_unit(x, y, cx, cy):
 for gen, row in devnet.generators.iterrows():
     b = row["bus"]
     x, y = devnet.buses.loc[b, ["x", "y"]]
+
     ux, uy = radial_unit(x, y, cx, cy)
 
-    # generator marker outward from bus
-    gx, gy = x + ux * R_ICON, y + uy * R_ICON
-    ax.scatter(gx, gy, s=140, marker="s", zorder=6)
+    # generator marker centered inside bus (aligned with devnetDC)
+    gx, gy = x, y
 
-    # generator label further outward
+    # generator label outward
+    tx, ty = x + ux * R_TEXT, y + uy * R_TEXT
+
+    ax.scatter(
+        gx,
+        gy,
+        s=70,
+        marker="s",
+        color="tab:green",
+        edgecolor="black",
+        linewidth=1.2,
+        zorder=9,
+        clip_on=False,
+    )
+
     carrier = row.get("carrier", "")
     p_nom = row.get("p_nom", np.nan)
-    tx, ty = x + ux * R_TEXT, y + uy * R_TEXT
+
     ax.text(
         tx, ty,
         f"{gen}\n{carrier}, p_nom={p_nom:g}",
@@ -419,6 +608,10 @@ for ld, row in devnet.loads.iterrows():
         bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.7),
         zorder=7,
     )
+
+# Adjust x-axis limits to add extra space on the right for generator labels (especially DC BYOG)
+xmin, xmax = ax.get_xlim()
+ax.set_xlim(xmin - 3.5, xmax + 0.5)
 
 # ------------------------------------------------------------------------------
 #   Plot DevNet SLD: A PyPSA network

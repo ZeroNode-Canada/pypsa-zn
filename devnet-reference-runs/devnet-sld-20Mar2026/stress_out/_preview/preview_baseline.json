@@ -1,0 +1,20 @@
+{
+  "snapshot": "now",
+  "objective": 1499999.9999999998,
+  "lmp": {
+    "WECC_NW": 50.0,
+    "WECC_SW": 50.0,
+    "SPP_MISO": 50.0,
+    "PJM_NE": 50.0,
+    "SERC_SE": 50.0,
+    "ERCOT": 50.0
+  },
+  "line_loading_pu": {
+    "L_WECC_NW_WECC_SW": 0.6,
+    "L_WECC_SW_SPP_MISO": 1.0,
+    "L_SPP_MISO_ERCOT": 1.0,
+    "L_SPP_MISO_PJM_NE": 0.26666666666666666,
+    "L_PJM_NE_SERC_SE": 0.8666666666666666,
+    "L_SERC_SE_ERCOT": 0.1333333333333334
+  }
+}

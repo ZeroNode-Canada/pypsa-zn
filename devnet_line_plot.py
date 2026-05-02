@@ -1,26 +1,43 @@
-"""
-devnet_line_plot.py
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright 2025 ZeroNode
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Objective
-- Generate a 4-panel stacked plot of DevNet system metrics vs transmission line deration (k_line).
+# devnet_line_plot.py
+#
+# Objective
+# - Generate a 4-panel stacked plot of DevNet system metrics vs transmission line deration (k_line).
 
-What it does
-- Reads a single worksheet from devnet_plots.xlsx, auto-detects required metric columns,
-  sorts cases by line deration factor (typically: 1.0, 0.8, 0.6, 0.4, 0.2, 0.1), and saves a PNG with:
-  (1) Objective (system cost) with infeasible points marked as INF,
-  (2) LMP spread,
-  (3) Max line loading (p.u.),
-  (4) Near-bind constraint count.
+# What it does
+# - Reads a single worksheet from devnet_plots.xlsx, auto-detects required metric columns,
+#  sorts cases by line deration factor (typically: 1.0, 0.8, 0.6, 0.4, 0.2, 0.1), and saves a PNG with:
+#  (1) Objective (system cost) with infeasible points marked as INF,
+#  (2) LMP spread,
+#  (3) Max line loading (p.u.),
+#  (4) Near-bind constraint count.
 
-Inputs
-- Excel file: <script_dir>/denvnet-stress-vectors/devnet_plots.xlsx
-- Sheet: DevNet_line<>SystemCost  (adjust if your workbook uses a different sheet name)
-- Header row index: HDR_ROW (default 9)
+# Inputs
+# - Excel file: <script_dir>/devnet-stress-vectors/devnet_plots.xlsx
+# - Sheet: DevNet_line<>SystemCost  (adjust if your workbook uses a different sheet name)
+# - Header row index: HDR_ROW (default 9)
+# 
+# Outputs
+# - PNG file: <script_dir>/denvnet-stress-vectors/line_vs_metrics.png
+# - Console: prints output path; raises KeyError if required columns are missing.
 
-Outputs
-- PNG file: <script_dir>/denvnet-stress-vectors/line_vs_metrics.png
-- Console: prints output path; raises KeyError if required columns are missing.
-"""
+# Run: devnet_line_plot.py
+# ------------------------------------------------------------------------------
 
 import os
 import shutil
@@ -33,7 +50,7 @@ import numpy as np
 # --- Configuration: paths, filenames, worksheet selection ---
 # ------------------------------------------------------------------------------
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-TEST_VECTORS_DIR_NAME = "denvnet-stress-vectors"
+TEST_VECTORS_DIR_NAME = "devnet-stress-vectors"
 
 DEVNET_XLSX_NAME = "devnet_plots.xlsx"
 SHEET_NAME = "DevNet_line<>near_bind_ct"   # <-- adjust if your sheet name differs
