@@ -1,22 +1,18 @@
-# SPDX-License-Identifier: Apache-2.0
-#
-# Copyright 2025 ZeroNode
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# devnet_stress_tc.md
-# ------------------------------------------------------------------------------
-
+```text
+SPDX-License-Identifier: Apache-2.0
+Copyright 2025 ZeroNode
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+devnet_stress_tc.md
+------------------------------------------------------------------------------
+```
 
 # Devnet Stress Test Vectors
 DevNet Stress Test Vector: Structure, design and implementation
@@ -24,23 +20,6 @@ DevNet Stress Test Vector: Structure, design and implementation
 ---
 
 # Table of Contents
-- [SPDX-License-Identifier: Apache-2.0](#spdx-license-identifier-apache-20)
-- [](#)
-- [Copyright 2025 ZeroNode](#copyright-2025-zeronode)
-- [](#-1)
-- [Licensed under the Apache License, Version 2.0 (the "License");](#licensed-under-the-apache-license-version-20-the-license)
-- [you may not use this file except in compliance with the License.](#you-may-not-use-this-file-except-in-compliance-with-the-license)
-- [You may obtain a copy of the License at](#you-may-obtain-a-copy-of-the-license-at)
-- [](#-2)
-- [http://www.apache.org/licenses/LICENSE-2.0](#httpwwwapacheorglicenseslicense-20)
-- [](#-3)
-- [Unless required by applicable law or agreed to in writing, software](#unless-required-by-applicable-law-or-agreed-to-in-writing-software)
-- [distributed under the License is distributed on an "AS IS" BASIS,](#distributed-under-the-license-is-distributed-on-an-as-is-basis)
-- [WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.](#without-warranties-or-conditions-of-any-kind-either-express-or-implied)
-- [See the License for the specific language governing permissions and](#see-the-license-for-the-specific-language-governing-permissions-and)
-- [limitations under the License.](#limitations-under-the-license)
-- [devnet\_stress\_tc.md](#devnet_stress_tcmd)
-- [------------------------------------------------------------------------------](#------------------------------------------------------------------------------)
 - [Devnet Stress Test Vectors](#devnet-stress-test-vectors)
 - [Table of Contents](#table-of-contents)
 - [Devnet Stress Test Vectors](#devnet-stress-test-vectors-1)
