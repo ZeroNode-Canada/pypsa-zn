@@ -1,0 +1,764 @@
+<!--
+SPDX-License-Identifier: Apache-2.0
+
+Copyright 2026 ZeroNode
+
+Licensed under the Apache License, Version 2.0
+-->
+
+<!doctype html>
+
+<html>
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <title>
+    ZeroNode Datacenter BYOG Demo
+  </title>
+
+  <style>
+
+    body {
+      margin: 0;
+      font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      background: #0B2D3A;
+      color: #BED6D8;
+    }
+
+    .page {
+      padding: 36px;
+    }
+
+    .hero {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      margin-bottom: 36px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 42px;
+      color: #BED6D8;
+    }
+
+    .subtitle {
+      margin-top: 10px;
+      font-size: 20px;
+      color: #417F8D;
+    }
+
+    .section-title {
+      margin-top: 24px;
+      margin-bottom: 18px;
+      font-size: 24px;
+      color: #BED6D8;
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .preset-card {
+      background: #123847;
+      border: 1px solid #BED6D8;
+      border-radius: 18px;
+      padding: 24px;
+      min-height: 220px;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .preset-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #BED6D8;
+      margin-bottom: 12px;
+    }
+
+    .preset-desc {
+      font-size: 16px;
+      line-height: 1.5;
+      color: #BED6D8;
+      flex-grow: 1;
+    }
+
+    .preset-notes {
+      margin-top: 14px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #417F8D;
+    }
+
+    .scenario-desc {
+
+      color: #BED6D8;
+    }
+
+    .scenario-desc div {
+
+      color: #BED6D8;
+    }
+
+    .preset-notes div {
+      margin-top: 6px;
+    }
+
+    .run-btn {
+      margin-top: 24px;
+      display: inline-block;
+      padding: 12px 18px;
+      background: #BED6D8;
+      color: #0B2D3A;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .run-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* ----------------------------------------------------------- */
+    /* Scenario execution overlay */
+    /* ----------------------------------------------------------- */
+
+    #runOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(11,45,58,0.92);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .spinner {
+      width: 72px;
+      height: 72px;
+      border: 8px solid #417F8D;
+      border-top: 8px solid #BED6D8;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .overlay-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #BED6D8;
+    }
+
+    .overlay-subtitle {
+      font-size: 18px;
+      color: #417F8D;
+    }
+
+    .devnet-panel {
+
+      display: flex;
+
+      gap: 24px;
+
+      align-items: stretch;
+
+      margin-bottom: 36px;
+    }
+
+    .devnet-image {
+
+      flex: 0 0 420px;
+
+      display: flex;
+
+      align-items: flex-start;
+    }
+
+    .devnet-image img {
+
+      width: 100%;
+
+      height: auto;
+
+      margin-top: 42px;
+
+      border-radius: 12px;
+
+      border: 1px solid #BED6D8;
+
+      background: white;
+    }
+
+    .devnet-info {
+
+      flex: 1;
+    }
+
+    .devnet-title {
+
+      font-size: 24px;
+
+      font-weight: 700;
+
+      margin-bottom: 12px;
+
+      color: #BED6D8;
+    }
+
+    .devnet-info pre {
+
+      background: #123847;
+
+      border: 1px solid #BED6D8;
+
+      border-radius: 12px;
+
+      padding: 16px;
+
+      color: #BED6D8;
+
+      overflow: auto;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="page">
+
+    <div class="hero">
+
+      <img
+        src="assets/ZeroNodeTM-logo.png"
+        alt="ZeroNode"
+        style="height:72px; width:auto;"
+      >
+
+      <div>
+
+        <h1>
+          ZeroNode Datacenter BYOG Demo
+        </h1>
+
+        <div class="subtitle">
+          PyPSA-ZN · Grid Congestion · LMP Spread · Datacenter BYOG
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ----------------------------------------------------------- -->
+    <!-- DevNet summary panel -->
+    <!-- ----------------------------------------------------------- -->
+
+    <div class="devnet-panel">
+
+      <div class="devnet-image">
+
+        <img
+          src="/devnetDC-sld/plots/devnetDC-sld.png"
+          alt="DevNetDC SLD"
+        >
+
+      </div>
+
+      <div class="devnet-info">
+
+        <div class="devnet-title">
+          DevNet Base Parameters
+        </div>
+
+        <pre id="devnetBaseParams">
+Loading...
+        </pre>
+
+      </div>
+
+    </div>
+
+    <div class="section-title">
+      Select a curated scenario
+    </div>
+
+    <div class="preset-grid">
+
+      <div class="preset-card">
+
+                  <div class="preset-title">
+                    Byog Complements Scenario
+                  </div>
+
+                  <div class="preset-desc scenario-desc">
+                    <div>• Grid remains feasible but nodal congestion causes LMP spread to widen</div><div>• BYOG steps in, increasing dc_p_nom at byog_mc lower than nodal prices</div><div>• BYOG reduces congestion and LMP spread while serving local demand</div><div>• LMP spread reduces toward zero as BYOG complements local generation</div><div>• Effective cost at stressed node reduces as BYOG displaces expensive local supply</div>
+                  </div>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    byog_complements_case1
+                  </div>
+
+                  <div class="preset-desc">
+                    Grid remains feasible but nodal congestion causes LMP spread to widen
+                  </div>
+
+                  <div class="preset-notes">
+                    <div>• PJM_NE nodal demand grows 3.5x</div><div>• PJM_NE marginal cost [mc_bus['PJM_NE'] == 80.0] increases to reflect congestion stress</div><div>• Datacenter BYOG capacity [dc_p_nom == 2000MW] is unavailable to dispatch</div><div>• BYOG marginal cost [byog_mc == 60.0] serves local demand</div><div>• OBSERVE: OPF remains feasible (objective > $0M)</div><div>• OBSERVE: LMP spread widens as congestion increases</div>
+                  </div>
+
+                  <a
+                      class="run-btn"
+                      href="javascript:void(0);"
+                      onclick="runScenario('byog_complements_case1')"
+                  >
+                      Run Scenario
+                  </a>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    byog_complements_case2
+                  </div>
+
+                  <div class="preset-desc">
+                    Grid remains feasible but nodal congestion causes LMP spread to widen
+                  </div>
+
+                  <div class="preset-notes">
+                    <div>• PJM_NE nodal demand grows 3.5x</div><div>• PJM_NE marginal cost [mc_bus['PJM_NE'] == 80.0] increases to reflect congestion stress</div><div>• Datacenter BYOG capacity increased to [dc_p_nom == 4500MW] to address nodal congestion</div><div>• BYOG marginal cost [byog_mc == 60.0] serves local and nodal demand</div><div>• OBSERVE: OPF remains feasible (objective > $0M)</div><div>• OBSERVE: LMP spread widens as congestion increases</div>
+                  </div>
+
+                  <a
+                      class="run-btn"
+                      href="javascript:void(0);"
+                      onclick="runScenario('byog_complements_case2')"
+                  >
+                      Run Scenario
+                  </a>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    byog_complements_case3
+                  </div>
+
+                  <div class="preset-desc">
+                    Grid remains feasible but nodal congestion causes LMP spread to widen
+                  </div>
+
+                  <div class="preset-notes">
+                    <div>• PJM_NE nodal demand grows 3.5x</div><div>• PJM_NE marginal cost [mc_bus['PJM_NE'] == 80.0] increases to reflect congestion stress</div><div>• Datacenter BYOG capacity increased to [dc_p_nom == 6000MW] to address nodal congestion</div><div>• BYOG marginal cost [byog_mc == 60.0] serves local and nodal demand</div><div>• OBSERVE: OPF remains feasible (objective > $0M)</div><div>• OBSERVE: LMP spread widens as congestion increases</div>
+                  </div>
+
+                  <a
+                      class="run-btn"
+                      href="javascript:void(0);"
+                      onclick="runScenario('byog_complements_case3')"
+                  >
+                      Run Scenario
+                  </a>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    byog_complements_case4
+                  </div>
+
+                  <div class="preset-desc">
+                    Grid remains feasible but nodal congestion causes LMP spread to widen
+                  </div>
+
+                  <div class="preset-notes">
+                    <div>• PJM_NE nodal demand grows 3.5x</div><div>• PJM_NE marginal cost [mc_bus['PJM_NE'] == 80.0] increases to reflect congestion stress</div><div>• Datacenter BYOG capacity increased to [dc_p_nom == 10000MW] to address ndodal congestion</div><div>• BYOG marginal cost [byog_mc == 60.0] serves local and nodal demand</div><div>• OBSERVE: OPF remains feasible (objective > $0M)</div><div>• OBSERVE: LMP spread starts to reduce at order of magnitude higher BYOG capacity</div>
+                  </div>
+
+                  <a
+                      class="run-btn"
+                      href="javascript:void(0);"
+                      onclick="runScenario('byog_complements_case4')"
+                  >
+                      Run Scenario
+                  </a>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    byog_complements_case5
+                  </div>
+
+                  <div class="preset-desc">
+                    Grid remains feasible but nodal congestion causes LMP spread to widen
+                  </div>
+
+                  <div class="preset-notes">
+                    <div>• PJM_NE nodal demand grows 3.5x</div><div>• PJM_NE marginal cost [mc_bus['PJM_NE'] == 80.0] increases to reflect congestion stress</div><div>• Datacenter BYOG capacity reduced back to [dc_p_nom == 4500MW] while addressing nodal congestion</div><div>• BYOG marginal cost decreased to [byog_mc == 45.0] attempting to reduce LMP Spread</div><div>• OBSERVE: OPF remains feasible (objective > $0M)</div><div>• OBSERVE: LMP spread remains wide due to congestion</div>
+                  </div>
+
+                  <a
+                      class="run-btn"
+                      href="javascript:void(0);"
+                      onclick="runScenario('byog_complements_case5')"
+                  >
+                      Run Scenario
+                  </a>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    byog_complements_case6
+                  </div>
+
+                  <div class="preset-desc">
+                    Grid remains feasible but nodal congestion causes LMP spread to widen
+                  </div>
+
+                  <div class="preset-notes">
+                    <div>• PJM_NE nodal demand grows 3.5x</div><div>• PJM_NE marginal cost [mc_bus['PJM_NE'] == 80.0] increases to reflect congestion stress</div><div>• Datacenter BYOG capacity increased back to [dc_p_nom == 6000MW] to address ndodal congestion</div><div>• BYOG marginal cost decreased to [byog_mc == 45.0] attempting to reduce LMP Spread</div><div>• OBSERVE: OPF remains feasible (objective > $0M)</div><div>• OBSERVE: LMP spread continues to remain wide due to congestion</div>
+                  </div>
+
+                  <a
+                      class="run-btn"
+                      href="javascript:void(0);"
+                      onclick="runScenario('byog_complements_case6')"
+                  >
+                      Run Scenario
+                  </a>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    byog_complements_case7
+                  </div>
+
+                  <div class="preset-desc">
+                    Grid remains feasible but nodal congestion causes LMP spread to widen
+                  </div>
+
+                  <div class="preset-notes">
+                    <div>• PJM_NE nodal demand grows 3.5x</div><div>• PJM_NE marginal cost [mc_bus['PJM_NE'] == 80.0] increases to reflect congestion stress</div><div>• Datacenter BYOG capacity increased to [dc_p_nom == 10000MW] to address ndodal congestion</div><div>• BYOG marginal cost [byog_mc == 60.0] serves local and nodal demand</div><div>• OBSERVE: OPF remains feasible (objective > $0M)</div><div>• OBSERVE: LMP spread reduce to 'Zero' at order of magnitude higher BYOG capacity and lower byog_mc</div>
+                  </div>
+
+                  <a
+                      class="run-btn"
+                      href="javascript:void(0);"
+                      onclick="runScenario('byog_complements_case7')"
+                  >
+                      Run Scenario
+                  </a>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    Byog Competes Scenario
+                  </div>
+
+                  <div class="preset-desc scenario-desc">
+                    <div>• Grid cannot economically or physically serve stressed nodal demand</div><div>• OPF approaches infeasible region (objective = NaN)</div><div>• Feasibility is restored by increasing dc_p_nom</div><div>• BYOG dispatch competes with grid generation to serve local demand</div><div>• byog_mc can be set for BYOG to seek profit while serving local demand</div>
+                  </div>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    byog_competes_case1
+                  </div>
+
+                  <div class="preset-desc">
+                    Grid cannot economically or physically serve stressed PJM_NE nodal demand
+                  </div>
+
+                  <div class="preset-notes">
+                    <div>• PJM_NE nodal demand exponentially grows 4x</div><div>• Datacenter BYOG capacity [dc_p_nom == 2000MW] is unavailable to dispatch</div><div>• BYOG marginal cost [byog_mc == 60.0] serves local demand</div><div>• OBSERVE: OPF is infeasible objective = NaN)</div>
+                  </div>
+
+                  <a
+                      class="run-btn"
+                      href="javascript:void(0);"
+                      onclick="runScenario('byog_competes_case1')"
+                  >
+                      Run Scenario
+                  </a>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    byog_competes_case2
+                  </div>
+
+                  <div class="preset-desc">
+                    Grid cannot economically or physically serve stressed PJM_NE nodal demand
+                  </div>
+
+                  <div class="preset-notes">
+                    <div>• PJM_NE nodal demand exponentially grows 4x</div><div>• Datacenter BYOG capacity increased [dc_p_nom == 4500MW] to be available for dispatch</div><div>• BYOG marginal cost [byog_mc == 60.0] serves local and nodal demand</div><div>• OBSERVE: OPF becomes feasible (objective > $0M)</div>
+                  </div>
+
+                  <a
+                      class="run-btn"
+                      href="javascript:void(0);"
+                      onclick="runScenario('byog_competes_case2')"
+                  >
+                      Run Scenario
+                  </a>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    byog_competes_case3
+                  </div>
+
+                  <div class="preset-desc">
+                    Grid cannot economically or physically serve stressed PJM_NE nodal demand
+                  </div>
+
+                  <div class="preset-notes">
+                    <div>• PJM_NE nodal demand exponentially grows 4x</div><div>• Datacenter BYOG capacity increased [dc_p_nom == 4500MW] to be available for dispatch</div><div>• BYOG marginal cost increased [byog_mc == 70.0] to seek profit while serving local demand</div><div>• OBSERVE: OPF becomes feasible (objective >> $0M)</div>
+                  </div>
+
+                  <a
+                      class="run-btn"
+                      href="javascript:void(0);"
+                      onclick="runScenario('byog_competes_case3')"
+                  >
+                      Run Scenario
+                  </a>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    byog_competes_case4
+                  </div>
+
+                  <div class="preset-desc">
+                    Grid cannot economically or physically serve stressed PJM_NE nodal demand
+                  </div>
+
+                  <div class="preset-notes">
+                    <div>• PJM_NE nodal demand exponentially grows 4x</div><div>• Datacenter BYOG capacity increased [dc_p_nom == 4500MW] to be available for dispatch</div><div>• BYOG marginal cost further increased [byog_mc == 80.0] motivated by increasing profits while serving local demand</div><div>• OBSERVE: OPF becomes feasible (objective >> $0M)</div>
+                  </div>
+
+                  <a
+                      class="run-btn"
+                      href="javascript:void(0);"
+                      onclick="runScenario('byog_competes_case4')"
+                  >
+                      Run Scenario
+                  </a>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    byog_competes_case5
+                  </div>
+
+                  <div class="preset-desc">
+                    Grid cannot economically or physically serve stressed PJM_NE nodal demand
+                  </div>
+
+                  <div class="preset-notes">
+                    <div>• PJM_NE nodal demand exponentially grows 4x</div><div>• Datacenter BYOG capacity increased [dc_p_nom == 6000MW] to be available for dispatch</div><div>• BYOG marginal cost further increased [byog_mc == 90.0] motivated by increasing profits while serving local demand</div><div>• OBSERVE: OPF becomes feasible (objective >> $0M)</div>
+                  </div>
+
+                  <a
+                      class="run-btn"
+                      href="javascript:void(0);"
+                      onclick="runScenario('byog_competes_case5')"
+                  >
+                      Run Scenario
+                  </a>
+
+                </div>
+                
+
+                <div class="preset-card">
+
+                  <div class="preset-title">
+                    byog_competes_case6
+                  </div>
+
+                  <div class="preset-desc">
+                    Grid cannot economically or physically serve stressed PJM_NE nodal demand
+                  </div>
+
+                  <div class="preset-notes">
+                    <div>• PJM_NE nodal demand explodes 5x</div><div>• Datacenter BYOG capacity increased [dc_p_nom == 10000MW] to address extreme stress and be available for dispatch</div><div>• BYOG marginal cost further increased [byog_mc == 100.0] motivated by increasing profits while serving local demand</div><div>• OBSERVE: OPF becomes feasible (objective >> $0M)</div>
+                  </div>
+
+                  <a
+                      class="run-btn"
+                      href="javascript:void(0);"
+                      onclick="runScenario('byog_competes_case6')"
+                  >
+                      Run Scenario
+                  </a>
+
+                </div>
+
+    </div>
+
+  </div>
+
+  <!-- ----------------------------------------------------------- -->
+  <!-- Scenario execution overlay -->
+  <!-- ----------------------------------------------------------- -->
+  <div id="runOverlay">
+
+    <div class="spinner"></div>
+
+    <div class="overlay-title">
+      Running PyPSA OPF Scenario...
+    </div>
+
+    <div class="overlay-subtitle">
+      Solving network optimization...
+    </div>
+
+  </div>
+
+  <script>
+
+    function runScenario(presetName) {
+
+      const overlay =
+        document.getElementById("runOverlay");
+
+      overlay.style.display = "flex";
+
+      window.onpageshow = function () {
+        overlay.style.display = "none";
+      };
+
+      window.location.href =
+        `/run?preset=${presetName}`;
+    }
+
+    // --------------------------------------------------------------
+    // Demo server heartbeat monitor
+    // --------------------------------------------------------------
+    async function checkHeartbeat() {
+
+      try {
+
+        const r =
+          await fetch("/heartbeat");
+
+        if (!r.ok) {
+          throw new Error("dead");
+        }
+
+      } catch (err) {
+
+        document.body.innerHTML = `
+          <div style="
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+            background:#0B2D3A;
+            color:#BED6D8;
+            font-family:system-ui;
+            text-align:center;
+            padding:40px;
+          ">
+
+            <h1 style="font-size:42px;">
+              Demo Session Ended... 
+            </h1>
+
+            <div style="
+              margin-top:20px;
+              font-size:22px;
+              color:#417F8D;
+            ">
+              Please close this tab and restart pypsa_zn_demo.py...
+            </div>
+
+          </div>
+        `;
+
+        clearInterval(heartbeatTimer);
+      }
+    }
+
+    const heartbeatTimer =
+      setInterval(checkHeartbeat, 3000);
+
+    // --------------------------------------------------------------
+    // Load DevNet base parameters
+    // --------------------------------------------------------------
+    fetch("/devnet_base_params")
+      .then(r => r.text())
+      .then(txt => {
+
+        document.getElementById(
+          "devnetBaseParams"
+        ).textContent = txt;
+      });
+
+  </script>
+
+</body>
+
+</html>

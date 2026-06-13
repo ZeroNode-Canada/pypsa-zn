@@ -61,9 +61,15 @@ DevNet Stress Test Vector: Structure, design and implementation
       - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-case-5)
       - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5: Conditions](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-case-5-conditions)
       - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5: Cases](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-case-5-cases)
-        - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case\[byog competes\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadcasebyog-competes)
+        - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5: Cases w/o k\_load patch](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-case-5-cases-wo-k_load-patch)
+          - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case\[byog competes\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadcasebyog-competes)
+          - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case\[byog complements\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadcasebyog-complements)
+        - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5: Cases w/ k\_load patch](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-case-5-cases-w-k_load-patch)
+          - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case\[byog competes\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadcasebyog-competes-1)
+          - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case\[byog complements\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadcasebyog-complements-1)
+          - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::demo\_preset Case\[byog competes\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreaddemo_preset-casebyog-competes)
+          - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::demo\_preset Case\[byog complements\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreaddemo_preset-casebyog-complements)
         - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Observations\[byog competes\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadobservationsbyog-competes)
-        - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case\[byog complements\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadcasebyog-complements)
         - [DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Observations\[byog complements\]](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadobservationsbyog-complements)
 - [Reference](#reference)
 
@@ -169,6 +175,10 @@ Based on cleanup of .\devnet_stress_tc.md per above, review/Document/Delete:
 **ASR-Note:** **Date: 15 April 2026**  
 - [**Datacenter BYOG Replication:** pypsa-zn\devnetDC-sld-15Apr2026\stress_out](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-case-5)  
 - [DCbyogDevNetStressReport.html](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-case-5-cases)
+
+**ASR-Note:** **Date: 22 May 2026**  
+- [**Datacenter BYOG Replication:** pypsa-zn\devnet-stress-vectors](#devnet-stress-testdatacenter-byog-effects-on-lmp-spread-lmp_spreadtest-case-5-cases-w-k_load-patch)
+- [DCbyogDevNetStressReport_22May2026.html](./DCbyogDevNetStressReport_22May2026.html)
 
 ---
 
@@ -1080,14 +1090,50 @@ mc_bus = {
 
 #### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5: Cases
 **Test Plan cases:** Varying per dc_byog generation & marginal cost:  
-Base Replication Reference:  
-- [DCbyogDevNetStressReport.html](./DCbyogDevNetStressReport.html)  
 
 ---
 
-##### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case[byog competes]
+##### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5: Cases w/o k_load patch
+
+Base Replication Reference:  
+- [DCbyogDevNetStressReport.html](./DCbyogDevNetStressReport.html)  
+
+**Reference:** Test cases prior to following patch
+
+``` devnet_stress_lib.py
+        # Do NOT apply regional load stress multiplier to explicit
+        # datacenter load objects.
+        #
+        # Datacenter load must remain independently controllable via:
+        #   dc_p_set
+        #
+        # This prevents:
+        #   k_load from silently multiplying DC demand.
+        #
+        # Example:
+        #   PJM_NE regional load stress = 6000 MW
+        #   Regional load multiplier    = k_load
+        #   DC load                     = 2000 MW
+        #   Total PJM_NE load           = [(6000 * k_load) + 2000] MW
+        #
+        # NOT:
+        #   [(6000 + 2000) * k_load] MW
+```
+
+---
+
+###### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case[byog competes]
 **ρ → ∞: The BTM generation rivals the generation available from the grid on the zonal bus** 
 - Commit ID: [15,... 18]
+
+``` DCbyogDevNetStressReport.html
+ASR-DASH::COMMIT::c_nn::baseline
+----------------------------------------
+args::
+  Constant Conditions: scenario=baseline  mc_mode=set dc_p_set=CSV Preset::2000.0  k_line={}  
+  Independent Vars (constraints): k_load={"PJM_NE": 3.0}  mc_bus={"PJM_NE": 60.0} 
+  Independent Vars (variable): byog_mc=CSV Preset::60.0  dc_p_nom=CSV Preset::2000.0  
+```
 
 **Test case 1, Commit C15:** 
   * k_load={"PJM_NE": 3.0} 
@@ -1117,19 +1163,20 @@ Base Replication Reference:
     * objective        : 2.480e+06
     * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE 
 
-##### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Observations[byog competes]
-**Observing Test case 1 - 4 above:**  
-As dc_p_nom increases, datacenter byog brings the gird out of in-feasibilty (objective : nan) to where actually the datacenter starts to make profit and compete with the grid generation (byog_mc=80.0).  
-
-**Key Takeaways:**
-* DC BYOG can materially improve grid resilience / adequacy under stressed conditions
-* DC competes, positively supports the grid by:
-  * Adequacy / resilience support first, congestion-price relief second.
 ---
 
-##### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case[byog complements]
+###### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case[byog complements]
 **ρ ≈ 1: BTM resource is viable for dispatch, Unit Committed (UC) to meet grid demand** 
 - Commit ID: [19,... 22]
+
+``` DCbyogDevNetStressReport.html
+ASR-DASH::COMMIT::c_nn::baseline
+----------------------------------------
+args::
+  Constant Conditions: scenario=baseline  mc_mode=set dc_p_set=CSV Preset::2000.0  k_line={}  
+  Independent Vars (constraints): k_load={"PJM_NE": 2.0}  mc_bus={"PJM_NE": 60.0} 
+  Independent Vars (variable): byog_mc=45.0  dc_p_nom=CSV Preset::2500.0  
+```
 
 **Test case 1, Commit C19:**  
   * k_load={"PJM_NE": 2.0} 
@@ -1158,6 +1205,362 @@ As dc_p_nom increases, datacenter byog brings the gird out of in-feasibilty (obj
 **Result Summary:**  
     * objective        : 1.928e+06
     * lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW 
+
+---
+
+##### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Test Case 5: Cases w/ k_load patch
+
+Base Replication Reference:  
+- [DCbyogDevNetStressReport_22May2026.html](./DCbyogDevNetStressReport_22May2026.html)  
+
+**Reference:** Test cases prior to following patch
+
+``` devnet_stress_lib.py
+        # Do NOT apply regional load stress multiplier to explicit
+        # datacenter load objects.
+        #
+        # Datacenter load must remain independently controllable via:
+        #   dc_p_set
+        #
+        # This prevents:
+        #   k_load from silently multiplying DC demand.
+        #
+        # Example:
+        #   PJM_NE regional load stress = 6000 MW
+        #   Regional load multiplier    = k_load
+        #   DC load                     = 2000 MW
+        #   Total PJM_NE load           = [(6000 * k_load) + 2000] MW
+        #
+        # NOT:
+        #   [(6000 + 2000) * k_load] MW
+```
+
+---
+
+###### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case[byog competes]
+**ρ → ∞: The BTM generation rivals the generation available from the grid on the zonal bus** 
+- Commit ID: [1,... 7]
+
+``` DCbyogDevNetStressReport_22May2026.html
+ASR-DASH::COMMIT::c_nn::baseline
+----------------------------------------
+args::
+  Constant Conditions: scenario=baseline  mc_mode=set dc_p_set=CSV Preset::2000.0  k_line={}  
+  Independent Vars (constraints): k_load={"PJM_NE": 4.0}
+  Independent Vars (variable):  mc_bus=[{"PJM_NE": 60.0} | zz]  
+                                byog_mc=[CSV Preset::60.0 | xx]  dc_p_nom=[CSV Preset::2000.0 | yy]  
+```
+
+**Test case 1, Commit C1:** 
+  * k_load={"PJM_NE": 4.0} 
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=CSV Preset::2000.0  
+**Result Summary:**  
+    * objective        : nan
+    * lmp_spread       : nan   max_lmp: nan @ 
+
+**Test case 2, Commit C2:**  
+  * k_load={"PJM_NE": 4.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4000.0   
+**Result Summary:**  
+    * objective        : nan
+    * lmp_spread       : nan   max_lmp: nan @ 
+
+**Test case 3, Commit C3:**  
+  * k_load={"PJM_NE": 4.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=6000.0   
+**Result Summary:**  
+    * objective        : 2.383e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE 
+
+**Test case 4, Commit C4:**  
+  * k_load={"PJM_NE": 4.0} 
+  * byog_mc=60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=6000.0   
+**Result Summary:**  
+    * objective        : 2.473e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE 
+
+**Test case 5, Commit C5:**  
+  * k_load={"PJM_NE": 4.0} 
+  * byog_mc=60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=5000.0   
+**Result Summary:**  
+    * objective        : 2.473e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE 
+
+**Test case 6, Commit C6:**  
+  * k_load={"PJM_NE": 4.0} 
+  * byog_mc=60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4500.0   
+**Result Summary:**  
+    * objective        : 2.473e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE 
+
+**Test case 7, Commit C7:**  
+  * k_load={"PJM_NE": 4.0} 
+  * byog_mc=60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4000.0   
+**Result Summary:**  
+    * objective        : nan
+    * lmp_spread       : nan   max_lmp: nan @ 
+
+---
+
+###### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Case[byog complements]
+**ρ ≈ 1: BTM resource is viable for dispatch, Unit Committed (UC) to meet grid demand** 
+- Commit ID: [8,... 16]
+
+``` DCbyogDevNetStressReport_22May2026.html
+ASR-DASH::COMMIT::c_nn::baseline
+----------------------------------------
+args::
+  Constant Conditions: scenario=baseline  mc_mode=set dc_p_set=CSV Preset::2000.0  k_line={}  
+  Independent Vars (constraints): k_load={"PJM_NE": 3.5}
+  Independent Vars (variable):  mc_bus=[{"PJM_NE": 60.0} | zz]  
+                                byog_mc=[CSV Preset::60.0 | xx]  dc_p_nom=[CSV Preset::2000.0 | yy]  
+```
+
+**Test case 1, Commit 8:**  
+  * k_load={"PJM_NE": 4.0} 
+  * byog_mc=80.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4500.0  
+**Result Summary:**  
+    * objective        : 2.560e+06
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE 
+
+**Test case 2, Commit 9:**  
+  * k_load={"PJM_NE": 4.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4500.0  
+**Result Summary:**  
+    * objective        : 2.406e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+
+**Test case 3, Commit 10:**  
+  * k_load={"PJM_NE": 3.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=2000.0  
+**Result Summary:**  
+    * objective        : 2.143e+0
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+
+**Test case 4, Commit 11:**  
+  * k_load={"PJM_NE": 3.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4500.0  
+**Result Summary:**  
+    * objective        : 2.106e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+
+**Test case 5, Commit 12:**  
+  * k_load={"PJM_NE": 3.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=2000.0  
+**Result Summary:**  
+    * objective        : 2.143e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+
+**Test case 6, Commit 13:**  
+  * k_load={"PJM_NE": 3.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=6000.0  
+**Result Summary:**  
+    * objective        : 2.083e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+
+**Test case 7, Commit 14:**  
+  * k_load={"PJM_NE": 3.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=8000.0  
+**Result Summary:**  
+    * objective        : 2.060e+06
+    * lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+
+**Test case 8, Commit 15:**  
+  * k_load={"PJM_NE": 3.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=7000.0  
+**Result Summary:**  
+    * objective        : 2.068e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+
+**Test case 9, Commit 16:**  
+  * k_load={"PJM_NE": 3.0} 
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=7500.0  
+**Result Summary:**  
+    * objective        : 2.062e+06
+    * lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+
+---
+
+###### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::demo_preset Case[byog competes]
+**Ref:** [demo_preset.json](../demo/demo_presets.json)  
+
+``` DCbyogDevNetStressReport_22May2026.html
+ASR-DASH::COMMIT::c_nn::baseline
+----------------------------------------
+args::
+  Constant Conditions: scenario=baseline  mc_mode=set dc_p_set=CSV Preset::2000.0  k_line={}  
+  Independent Vars (constraints): k_load={"PJM_NE": 4.0}
+  Independent Vars (variable):  mc_bus=[{"PJM_NE": 60.0} | zz]  
+                                byog_mc=[CSV Preset::60.0 | xx]  dc_p_nom=[CSV Preset::2000.0 | yy]  
+```
+
+**Test case 1::byog_competes_case1:** 
+  * k_load={"PJM_NE": 4.0} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=CSV Preset::2000.0  
+**Result Summary:**  
+    * objective        : nan
+    * lmp_spread       : nan   max_lmp: nan @ 
+
+**Test case 2::byog_competes_case2:** 
+  * k_load={"PJM_NE": 4.0} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4500.0  
+**Result Summary:**  
+    * objective        : 2.630e+06
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE
+
+**Test case 3::byog_competes_case3:** 
+  * k_load={"PJM_NE": 4.0} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=70.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4500.0  
+**Result Summary:**  
+    * objective        : 2.720e+06
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE
+
+**Test case 4::byog_competes_case4:** 
+  * k_load={"PJM_NE": 4.0} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=80.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4500.0  
+**Result Summary:**  
+    * objective        : 2.720e+06
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE
+
+**Test case 5::byog_competes_case5:** 
+  * k_load={"PJM_NE": 4.0} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=90.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=6000.0  
+**Result Summary:**  
+    * objective        : 2.763e+06
+    * lmp_spread       : 40.000   max_lmp: 90.000 @ PJM_NE
+
+**Test case 6::byog_competes_case6:** 
+  * k_load={"PJM_NE": 5.0} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=100.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=10000.0  
+**Result Summary:**  
+    * objective        : 3.307e+06
+    * lmp_spread       : 50.000   max_lmp: 100.000 @ PJM_NE
+
+---
+
+###### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::demo_preset Case[byog complements]
+**Ref:** [demo_preset.json](../demo/demo_presets.json)  
+
+``` DCbyogDevNetStressReport_22May2026.html
+ASR-DASH::COMMIT::c_nn::baseline
+----------------------------------------
+args::
+  Constant Conditions: scenario=baseline  mc_mode=set dc_p_set=CSV Preset::2000.0  k_line={}  
+  Independent Vars (constraints): k_load={"PJM_NE": 3.5}
+  Independent Vars (variable):  mc_bus=[{"PJM_NE": 60.0} | zz]  
+                                byog_mc=[CSV Preset::60.0 | xx]  dc_p_nom=[CSV Preset::2000.0 | yy]  
+```
+
+**Test case 1::byog_complements_case1:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 60.0}
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=CSV Preset::2000.0  
+**Result Summary:**  
+    * objective        : 2.323e+0
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+
+**Test case NA1:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=CSV Preset::2000.0  
+**Result Summary:**  
+    * objective        : 2.480e+0
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE
+
+**Test case 2::byog_complements_case2:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4500.0  
+**Result Summary:**  
+    * objective        : 2.430e+06
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE
+
+**Test case 3::byog_complements_case3:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=6000.0  
+**Result Summary:**  
+    * objective        : 2.400e+06
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE
+
+**Test case NA2:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=8000.0  
+**Result Summary:**  
+    * objective        : 2.360e+06
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE
+
+**Test case NA3:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=9000.0  
+**Result Summary:**  
+    * objective        : 2.340e+06
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE
+
+**Test case 4::byog_complements_case4:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=10000.0  
+**Result Summary:**  
+    * objective        : 2.323e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+
+**Test case NA4:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=12000.0  
+**Result Summary:**  
+    * objective        : 2.323e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+
+**Test case NA5:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=CSV Preset::60.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=20000.0  
+**Result Summary:**  
+    * objective        : 2.323e+06
+    * lmp_spread       : 10.000   max_lmp: 60.000 @ PJM_NE
+
+**Test case 5::byog_complements_case5:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=4500.0  
+**Result Summary:**  
+    * objective        : 2.362e+06
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE
+
+**Test case 6::byog_complements_case6:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=6000.0  
+**Result Summary:**  
+    * objective        : 2.310e+06
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE
+
+**Test case NA6:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=8000.0  
+**Result Summary:**  
+    * objective        : 2.240e+06
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE
+
+**Test case NA7:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=9000.0  
+**Result Summary:**  
+    * objective        : 2.205e+06
+    * lmp_spread       : 30.000   max_lmp: 80.000 @ PJM_NE
+
+**Test case 7::byog_complements_case7:**  
+  * k_load={"PJM_NE": 3.5} mc_bus={"PJM_NE": 80.0}
+  * byog_mc=45.0  dc_p_set=CSV Preset::2000.0  dc_p_nom=10000.0  
+**Result Summary:**  
+    * objective        : 2.175e+06
+    * lmp_spread       : 0.000   max_lmp: 50.000 @ WECC_NW
+
+---
+
+##### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Observations[byog competes]
+**Observing Test case 1 - 4 above:**  
+As dc_p_nom increases, datacenter byog brings the gird out of in-feasibilty (objective : nan) to where actually the datacenter starts to make profit and compete with the grid generation (byog_mc=80.0).  
+
+**Key Takeaways:**
+* DC BYOG can materially improve grid resilience / adequacy under stressed conditions
+* DC competes, positively supports the grid by:
+  * Adequacy / resilience support first, congestion-price relief second.
+
+---
 
 ##### DevNet Stress Test::Datacenter BYOG effects on LMP Spread (`lmp_spread`)::Observations[byog complements]
 **Observing Test case 1 - 4 above:**  

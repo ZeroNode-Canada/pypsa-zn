@@ -1,0 +1,123 @@
+<!doctype html>
+
+<html>
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <title>
+    DevNet Stress Report
+  </title>
+
+  <style>
+
+    body{
+      font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      margin:20px;
+    }
+
+    a{
+      color:#0b5fff;
+      text-decoration:none
+    }
+
+    a:hover{
+      text-decoration:underline
+    }
+
+    .nav{
+      position:sticky;
+      top:0;
+      background:#fff;
+      padding:10px 0;
+      border-bottom:1px solid #ddd;
+    }
+
+    .nav a{
+      margin-right:12px
+    }
+
+    pre{
+      background:#f6f8fa;
+      border:1px solid #ddd;
+      padding:12px;
+      border-radius:8px;
+      overflow:auto;
+    }
+
+    .card{
+      margin:18px 0;
+      padding:14px;
+      border:1px solid #eee;
+      border-radius:10px;
+    }
+
+    h1{
+      margin:0 0 8px 0
+    }
+
+    h2{
+      margin:0 0 10px 0
+    }
+
+    .top-row{
+      display:flex;
+      gap:24px;
+      align-items:flex-start;
+    }
+
+    .left-col{
+      flex:1 1 auto;
+      min-width:0;
+    }
+
+    .right-col{
+      flex:0 0 420px;
+      max-width:420px;
+    }
+
+    .summary-table{
+      width:100%;
+      table-layout:fixed;
+      border-collapse:collapse;
+    }
+
+    .summary-table th,
+    .summary-table td{
+      word-break:break-word;
+      overflow-wrap:anywhere;
+    }
+
+    .side-img{
+      display:block;
+      max-width:100%;
+      height:auto;
+      margin:0 auto 12px auto;
+      border:1px solid #ddd;
+      border-radius:10px;
+    }
+
+    .side-pre{
+      background:#f6f8fa;
+      border:1px solid #ddd;
+      padding:12px;
+      border-radius:10px;
+      white-space:pre;
+      font-family:ui-monospace,Consolas,Monaco,'Courier New',monospace;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+{{DEVNET_STRESS_BODY}}
+
+</body>
+
+</html>

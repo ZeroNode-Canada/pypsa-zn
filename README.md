@@ -37,8 +37,9 @@ The intended execution flow is **menu-driven** via `devnet_menu.py`:
     3. Build baseline SLD     → devnet_sld.py
     4. Build DC BYOG SLD      → devnetDC_sld.py
     5. Run DoE sanity         → devnet_doe.py
-    6. Stress / asymptotes    → devnet_stress.py   (iterative)
-    7. Generate plots         → devnet_*_plot.py
+    6. Stress / asymptotes    → devnet_stress.py
+    7. Demo scenarios         → demo/pypsa_zn_demo.py
+    8. Generate plots         → devnet_*_plot.py
 ```
 
 
@@ -48,6 +49,26 @@ The intended execution flow is **menu-driven** via `devnet_menu.py`:
 * devnet_sld.py and devnetDC_sld.py build PyPSA networks from CSV inputs.
 * devnet_stress.py is the primary research loop.
 * Reference outputs for replication are under ./devnet-stress-vectors/.
+
+---
+
+## Conference Demonstration Framework
+
+A presentation-oriented demonstration framework is provided under:
+
+```text
+./demo/
+```
+This subsystem builds on the same DevNet modeling engine while providing:
+* Interactive scenario selection
+* Story plot generation
+* Presentation dashboards
+* Conference kiosk support
+
+Refer:  
+./demo/README.md
+
+for demonstration-specific workflows and operator guidance.
 
 ---
 
@@ -157,6 +178,13 @@ This launches an interactive CLI that:
 ```
 
 * `index.html` is automatically regenerated after each commit.
+* Core simulation logic is implemented in:
+* To ensure modelling consistency, both devnet_stress.py & demo/pypsa_zn_demo.py; reuse the same modeling engine through:
+
+```text
+lib/devnet_stress_lib.py
+```
+
 
 For replication of published results, see **Replication notes (reference runs)** below,
 including `devnet_stress_tc.md` and `DevNet Stress Report_5.html`.

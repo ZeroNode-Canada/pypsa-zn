@@ -1,0 +1,297 @@
+<!--
+SPDX-License-Identifier: Apache-2.0
+
+Copyright 2026 ZeroNode
+
+Licensed under the Apache License, Version 2.0
+-->
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="15">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>ZeroNode PyPSA-ZN Demo</title>
+
+  <style>
+
+    body {
+      font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 0;
+      background: #0B2D3A;
+      color: #417F8D;
+    }
+
+    .page {
+      padding: 28px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      font-size: 38px;
+      margin: 0 0 8px 0;
+      color: #417F8D;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: #417F8D;
+    }
+
+    .badge {
+      background: #123847;
+      border: 1px solid #417F8D;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 16px;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: #123847;
+      border: 1px solid #BED6D8;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    }
+
+    .label {
+      font-size: 14px;
+      color: #BED6D8;
+      margin-bottom: 8px;
+    }
+
+    .value {
+      font-size: 30px;
+      font-weight: 700;
+      color: #417F8D;
+    }
+
+    .config {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .small-value {
+      font-size: 22px;
+      font-weight: 650;
+      color: #417F8D;
+    }
+
+    iframe {
+      width: 100%;
+      height: 620px;
+      border: 1px solid #26324e;
+      border-radius: 18px;
+      background: white;
+    }
+
+    /* ----------------------------------------------------------- */
+    /* Plot panels */
+    /* ----------------------------------------------------------- */
+    .plot-grid {
+
+      display: grid;
+
+      grid-template-columns: 1fr 1fr;
+
+      gap: 22px;
+
+      margin-bottom: 28px;
+    }
+    
+    .plot-section {
+
+      margin-bottom: 28px;
+    }
+
+    .plot-title {
+
+      font-size: 24px;
+
+      font-weight: 700;
+
+      color: #BED6D8;
+
+      margin-bottom: 14px;
+    }
+
+    .plot-frame {
+
+      background: #123847;
+
+      border: 1px solid #BED6D8;
+
+      border-radius: 18px;
+
+      padding: 18px;
+    }
+
+    .plot-frame img {
+
+      width: 100%;
+
+      height: auto;
+
+      display: block;
+
+      border-radius: 12px;
+
+      background: white;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="page">
+
+    <div class="hero">
+
+      <div style="display:flex; align-items:center; gap:18px;">
+
+        <img
+          src="assets/ZeroNodeTM-logo.png"
+          alt="ZeroNode"
+          style="height:72px; width:auto;"
+        >
+
+        <div>
+          <h1>ZeroNode Datacenter BYOG Demo</h1>
+
+          <div class="subtitle">
+            PyPSA-ZN DevNet6 · Datacenter BYOG effects on LMP spread
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="badge">
+        Preset: {{PRESET_NAME}}
+      </div>
+
+    </div>
+
+    <div class="grid">
+
+      <div class="card">
+        <div class="label">System Cost Objective</div>
+        <div class="value">{{OBJECTIVE_M}}</div>
+      </div>
+
+      <div class="card">
+        <div class="label">LMP Spread</div>
+        <div class="value">{{LMP_SPREAD}}</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Max Loading p.u.</div>
+        <div class="value">{{MAX_LOADING_PU}}</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Near-Bind Count</div>
+        <div class="value">{{NEAR_BIND_CT}}</div>
+      </div>
+
+    </div>
+
+    <div class="config">
+
+      <div class="card">
+        <div class="label">Datacenter Node Load Stress</div>
+        <div class="small-value">
+          k_load = {{K_LOAD}}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">BYOG Marginal Cost</div>
+        <div class="small-value">
+          {{BYOG_MC}}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">BYOG Capacity</div>
+        <div class="small-value">
+          {{DC_P_NOM}}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">DC Load</div>
+        <div class="small-value">
+          {{DC_P_SET}}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ----------------------------------------------------------- -->
+    <!-- Story plots -->
+    <!-- ----------------------------------------------------------- -->
+    <!-- STORY_PLOTS_BEGIN -->
+
+    <div class="plot-grid">
+
+      <div class="plot-section">
+        <div class="plot-title">BYOG Competes :: System Cost</div>
+        <div class="plot-frame">
+          <img src="plots/byog_competes_cost.png" alt="BYOG Competes Cost">
+        </div>
+      </div>
+
+      <div class="plot-section">
+        <div class="plot-title">BYOG Competes :: Profit</div>
+        <div class="plot-frame">
+          <img src="plots/byog_competes_profit.png" alt="BYOG Competes Profit">
+        </div>
+      </div>
+
+      <div class="plot-section">
+        <div class="plot-title">BYOG Complements :: LMP Spread</div>
+        <div class="plot-frame">
+          <img src="plots/byog_complements_lmp.png" alt="BYOG Complements LMP Spread">
+        </div>
+      </div>
+
+      <div class="plot-section">
+        <div class="plot-title">BYOG Complements :: System Cost</div>
+        <div class="plot-frame">
+          <img src="plots/byog_complements_cost.png" alt="BYOG Complements Cost">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- STORY_PLOTS_END -->  
+
+    <!-- ----------------------------------------------------------- -->
+
+    <iframe src="demo_out/index.html"></iframe>
+
+  </div>
+
+</body>
+</html>
