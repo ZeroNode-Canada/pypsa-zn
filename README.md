@@ -51,9 +51,13 @@ python devnet_menu.py
 ``` text
 Configure
    ↓
-Build DevNet / DevNetDC
+Build baseline DevNet
    ↓
-Stress / Commit OPF results
+Datacenter case — choose engine route
+   ├─ PyPSA → 6-bus DevNetDC + Datacenter BYOG
+   └─ PSO   → ERCOT Texas7k (6717 buses)
+   ↓
+Stress / Commit OPF results (PyPSA DevNet)
    ↓
 Basic diagnostic plots
    ↓
@@ -67,15 +71,15 @@ In script terms:
 ``` text
 devnet_cfg.py
       ↓
-devnet_sld.py / devnetDC_sld.py
+devnet_sld.py
+      ↓
+Datacenter case
+      ├─ PyPSA → devnetDC_sld.py
+      └─ PSO   → ercot7k_pso.py
+      ↓
+PyPSA research workflow
       ↓
 devnet_stress.py
-      ↓
-devnet_*_plot.py
-      ↓
-devnet_pub_figs.py
-      ↓
-demo/pypsa_zn_demo.py
 ```
 
 ------------------------------------------------------------------------
@@ -484,49 +488,241 @@ Generated publication artifacts are written to `./pub_figs/`.
 
 ------------------------------------------------------------------------
 
-## ERCOT Texas7k PSO Full-Cycle Case (PSO-only track)
+## ERCOT Texas7k PSO Full-Cycle Case
 
-A separate, PSO-only track lets you run the public **ERCOT Texas7k** case
-(6717 buses, 9140 branches, 634 injectors) full-cycle through PSO, driven
-from Python via `aimmspy` and your own AIMMS install/license. It does not
-build or touch a PyPSA network, and it does not modify `lib/devnet_stress_lib.py`
-or `devnet_stress.py` -- it is a sibling to `devnetDC_sld.py`, not a
-replacement.
+Menu Option `3) Datacenter case` provides two independent engine routes:
 
-``` text
-ercot7k/                 Texas7k PSO input tables
-pso_config.py            pso.local.toml -> DEVNET_PSO_* env defaults
-pso.local.toml.example   copy to pso.local.toml and edit
-ercot7k_pso.py           the runner (option 3 -> PSO route, in devnet_menu.py)
+```text
+3) Datacenter case — choose the engine route
+
+   PyPSA route
+      ↓
+   devnetDC_sld.py
+      ↓
+   6-bus DevNet + Datacenter BYOG
+
+   PSO route
+      ↓
+   ercot7k_pso.py
+      ↓
+   ERCOT Texas7k public case (6717 buses)
 ```
 
-### Setup
+### PyPSA Route
 
-You need an AIMMS install (26.1.x tested) with a license -- the free academic
-license works -- and a checkout of the PSO model project (`PSO.aimms`), which
-is not part of this repo.
+The PyPSA route builds the six-bus DevNet SLD with Datacenter BYOG from
+the CSV configuration.
 
-`aimmspy` needs **its own Python environment**: its dependencies force `linopy`
-down and break PyPSA's `n.optimize`, so it cannot share the PyPSA env. Set
-`python` in `pso.local.toml` to that interpreter and the runner re-launches
-itself there, which is what makes the menu entry work.
+```text
+devnetDC_sld.py
+      ↓
+devnet_config/devnet_dc.csv
+      ↓
+Datacenter bus
+Datacenter load
+BYOG capacity
+BYOG marginal cost
+      ↓
+PyPSA DevNetDC network
+```
 
-Copy `pso.local.toml.example` to `pso.local.toml` (repo root, gitignored) and
-fill in at least `project`. Leave `license_url` commented out to use the
-machine's configured license; `case` defaults to `ercot7k/texas7k.csv`.
+This is the DevNet research workflow used by `devnet_stress.py`,
+the diagnostic plotting tools, and `devnet_pub_figs.py`.
 
-### Running it
+### PSO Route
 
-``` bash
+The PSO route runs the public **ERCOT Texas7k** case (6717 buses) through
+Power System Optimizer (PSO), driven from Python through `aimmspy`.
+
+```text
+ercot7k/
+pso_config.py
+pso.local.toml
+      ↓
+ercot7k_pso.py
+      ↓
+aimmspy
+      ↓
+AIMMS + PSO
+      ↓
+ERCOT Texas7k solve
+```
+
+The PSO route is a separate engine path. It:
+
+* Does **not** build a PyPSA network.
+* Does **not** modify the six-bus DevNet/DevNetDC network.
+* Does **not** replace `devnetDC_sld.py`.
+* Uses the user's separately installed and licensed AIMMS/PSO environment.
+* Uses the public ERCOT Texas7k case supplied under `ercot7k/`.
+
+The PSO route is therefore an extension of the DevNet Engine workflow rather
+than a replacement for the PyPSA modeling engine. 
+
+#### AIMMS and PSO License Requirement
+
+PSO is separately licensed software and is **not distributed as part of the
+Apache-2.0 licensed `pypsa-zn` source code**.
+
+The PSO route requires:
+
+* AIMMS Developer.
+* A valid AIMMS license.
+* The separately supplied PSO model/project (`PSO.aimms`).
+* A PSO license supplied/configured by Polaris.
+* `aimmspy` in the PSO/AIMMS Python environment.
+
+Academic researchers may obtain an AIMMS Academic license. The PSO installation
+documentation states that academic users obtain the AIMMS license separately and
+then work with Polaris to obtain the corresponding PSO license. 
+
+**NOTE:** 
+**The proprietary PSO software, PSO license, and Polaris installation guide are not distributed through this repository.**
+
+Contact the **Polaris Systems Optimization (PSO) development team** for the
+current PSO Installation Guide, PSO software/license, and installation support.
+
+#### Configure `pso.local.toml`
+
+The repository provides:
+
+```text
+pso.local.toml.example
+```
+
+Create your machine-specific configuration:
+
+```powershell
+Copy-Item .\pso.local.toml.example .\pso.local.toml
+```
+
+`pso.local.toml` is a local machine configuration and should not be committed.
+
+Configure the paths for your local PSO/AIMMS environment, including the
+location of `PSO.aimms` and the Python interpreter containing `aimmspy`.
+
+Example structure:
+
+```toml
+project = "C:/path/to/PSO/PSO.aimms"
+python = "C:/path/to/PSO-python/python.exe"
+aimms_version = "26.1"
+```
+
+If required for the installed academic-license configuration:
+
+```toml
+license_url = "wss://..."
+```
+
+#### Windows 11 Path Requirement
+
+**For the currently validated Windows 11 PSO integration, use forward slashes
+(`/`) for paths in `pso.local.toml`.**
+
+Use:
+
+```toml
+project = "C:/path/to/PSO/PSO.aimms"
+python = "C:/path/to/python.exe"
+```
+
+Do **not** currently use the backslash examples contained in
+`pso.local.toml.example`:
+
+```toml
+project = "C:\\path\\to\\PSO\\PSO.aimms"
+```
+
+or:
+
+```toml
+project = 'C:\path\to\PSO\PSO.aimms'
+```
+
+Those forms did not work in the validated Windows 11 integration. The
+`pso.local.toml.example` documentation is pending correction.
+
+#### Separate Python Environments
+
+The PSO route should use a Python environment containing `aimmspy` that is separate from the validated PyPSA environment.
+
+Set its interpreter using:
+
+```toml
+python = "C:/path/to/PSO-python/python.exe"
+```
+
+When Option 3 is launched from the PyPSA environment, `ercot7k_pso.py`
+automatically re-launches itself using this configured interpreter when
+`aimmspy` is not available in the current interpreter. 
+
+#### Run the ERCOT Texas7k Case
+
+Directly:
+
+```powershell
 python ercot7k_pso.py
 ```
 
-or from `python devnet_menu.py`, option 3 (Datacenter case) -> PSO route ->
-base case; the same option 3 reaches the PyPSA DevNet build, so the two engine
-routes sit side by side. The runner prompts for a run name, prints a pre-flight
-summary, gates on confirmation, and verifies the result out of
-`results_ED_Ara.csv` rather than trusting the return code. Case details,
-attribution and known data caveats are in `ercot7k/README.md`.
+or:
+
+```text
+python devnet_menu.py
+      ↓
+3) Datacenter case
+      ↓
+PSO: ERCOT Texas7k public case
+      ↓
+Run the base case, full cycle
+```
+
+The runner:
+
+* Prompts for a run name.
+* Displays a pre-flight configuration summary.
+* Requests confirmation before starting the solve.
+* Executes the configured PSO cycle stack.
+* Writes logs and results into the run directory.
+* Verifies the solve using the resulting served-load data rather than relying
+  only on the AIMMS/PSO return status. 
+
+#### PSO/AIMMS Troubleshooting
+
+Check `pso.local.toml` first when the PSO route cannot locate:
+
+* `PSO.aimms`.
+* The AIMMS installation.
+* The `aimmspy` Python interpreter.
+* The ERCOT Texas7k case.
+* The AIMMS/PSO license.
+
+On Windows 11, confirm all configured paths use **forward slashes**.
+
+**PSO uses CPLEX as its optimization solver:**
+
+The message:
+
+```text
+Unable to load IBM CPLEX library. Exiting...
+```
+
+has been observed as a **false warning in the validated integration** when the subsequent PSO solve continues successfully. **Do not terminate the run based on this message alone.** 
+
+Allow the runner to continue and use the final solve/result verification to determine whether the run succeeded.
+
+
+If the runner reports:
+
+```text
+ASR-ERR:
+```
+
+Use the displayed error, `aimms.err`, and the PSO debug log to identify the
+underlying configuration or solve problem. `ercot7k_pso.py` surfaces these logs
+when the run fails. 
+
+For PSO installation, licensing, or AIMMS/CPLEX configuration issues, contact the Polaris development team.
 
 ------------------------------------------------------------------------
 
@@ -827,6 +1023,18 @@ interpretation remain the responsibility of the authors.
 ------------------------------------------------------------------------
 
 ## License and Attribution
+
+### PSO / AIMMS Integration
+
+The Apache-2.0 license for `pypsa-zn` applies to the ZeroNode source code
+distributed under that license. The optional PSO engine route integrates with
+software and licenses obtained separately from Polaris Systems Optimization,
+AIMMS, and their applicable third-party components.
+
+The repository does not grant rights to PSO, AIMMS, CPLEX, proprietary PSO
+documentation, or associated license files. Users of the PSO route are
+responsible for obtaining the required software and licenses from their
+respective providers.
 
 See:
 
