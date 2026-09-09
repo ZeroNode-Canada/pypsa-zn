@@ -1,0 +1,7 @@
+OptionName,OptionValue
+DateFormat,%c%y.%m.%d %H:%M
+MipGap,0.005
+SlackBusName,N111333
+NumberOfInputTabs,1
+MinimumIncrementalCost,-250
+MaximumIncrementalCost,5000

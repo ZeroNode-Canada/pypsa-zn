@@ -59,6 +59,15 @@ devnet-sld*/
 devnetDC-sld/
 devnetDC-sld*/
 
+# ercot7k PSO run output (generated -- logs, results; not the case inputs above)
+ercot7k-run/
+ercot7k-run*/
+
+# ------------------------------------------------------------------------------
+# Local PSO config (machine/site-specific -- DO NOT COMMIT)
+# ------------------------------------------------------------------------------
+pso.local.toml
+
 # ------------------------------------------------------------------------------
 # DevNet config (user-editable — DO NOT COMMIT)
 # ------------------------------------------------------------------------------
@@ -78,6 +87,13 @@ devnet_config/*.csv
 # EXCEPT reference artifacts
 !devnet-stress-vectors/
 !devnet-stress-vectors/**
+
+# EXCEPT the ercot7k PSO case inputs (input tables, not generated)
+!ercot7k/
+!ercot7k/**
+# Ignore run output if a run is written into the case dir
+ercot7k/logs/
+ercot7k/results/
 
 # ------------------------------------------------------------------------------
 # Reference outputs (keep controlled artifacts)

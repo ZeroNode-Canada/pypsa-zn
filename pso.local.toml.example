@@ -1,0 +1,35 @@
+# pso.local.toml.example -- copy to pso.local.toml (gitignored) and edit.
+#
+# Values here are applied as environment-variable DEFAULTS by pso_config.py: an
+# already-set DEVNET_PSO_* env var always wins. Uncomment and fill in what you need.
+#
+# On Windows, write paths with either doubled backslashes ("D:\\path\\to\\x") or
+# a literal string ('D:\path\to\x'). PSO 3.3 on Windows silently misreads some
+# forward-slash paths, so the runner normalizes everything to native separators
+# before handing it to AIMMS -- keeping this file native avoids the confusion.
+
+# Path to the PSO AIMMS project file (PSO.aimms). Required.
+# project = "D:\\path\\to\\PSO\\PSO.aimms"
+
+# Academic/cloud AIMMS license URL (wss://...). Omit this to use the machine's
+# already-configured AIMMS license -- most installs should leave this commented out.
+# license_url = "wss://licensing.aimms.cloud/..."
+
+# Explicit AIMMS /Bin path. If set, this wins over aimms_version and over the
+# auto-match-to-aimmspy default.
+# aimms_path = "C:\\Program Files\\AIMMS\\AIMMS26.1\\Bin"
+
+# Pinned AIMMS version for find_aimms_path(), e.g. "26.1". Ignored if aimms_path is
+# set. If neither is set, ercot7k_pso.py matches the AIMMS runtime to the installed
+# aimmspy package's major.minor version.
+# aimms_version = "26.1"
+
+# PSO case (options/control CSV) to run. May be absolute, or relative to the repo
+# root. Defaults to ercot7k/texas7k.csv if left unset.
+# case = "ercot7k/texas7k.csv"
+
+# Interpreter that has aimmspy installed. aimmspy cannot share an environment with
+# PyPSA (its dependencies force linopy down and break n.optimize), so the solve
+# needs its own env. devnet_menu.py launches scripts with whatever interpreter is
+# running the menu, so set this and ercot7k_pso.py re-launches itself there.
+# python = "C:\\path\\to\\env-with-aimmspy\\python.exe"

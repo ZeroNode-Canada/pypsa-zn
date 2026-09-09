@@ -1,0 +1,4 @@
+Cycle,Name,DeltaTime,LeadTime,DecisionTime,OrderTime,MipGap,MipGapAbsolute,MaxSolveTime,MaxIterations
+SC,,24,48,-1,-1,0.00500000,0.000,120.000,5
+DA,,24,48,12,11,0.00500000,0.000,120.000,2
+RT,,1,0,1,1,0.00500000,0.000,120.000,1

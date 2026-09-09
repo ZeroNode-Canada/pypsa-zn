@@ -1,0 +1,3 @@
+Scenario,Area,Load,Enforce,ScaleFactor,Schedule,Sequence
+0,0,,,,Load_fcst,
+ScnRT,0,,,,Load_act,

@@ -149,8 +149,14 @@ def print_header():
         "  2) Build DevNet SLD (baseline network) from CSV config (devnet_sld.py)\n"
         "     - Creates the 6-bus USA-lite DevNet baseline + CSV export + plots/ + logs/\n"
         "\n"
-        "  3) Build DevNet SLD with Datacenter BYOG from CSV config (devnetDC_sld.py)\n"
-        "     - Uses devnet_config/devnet_dc.csv for datacenter bus, load, BYOG capacity, BYOG MC\n"
+        "  3) Datacenter case -- choose the engine route\n"
+        "     - PyPSA route: build the 6-bus DevNet SLD with Datacenter BYOG\n"
+        "       from CSV config (devnetDC_sld.py). Uses devnet_config/devnet_dc.csv\n"
+        "       for datacenter bus, load, BYOG capacity and BYOG MC.\n"
+        "     - PSO route: the ERCOT Texas7k public case (6717 buses), driven via\n"
+        "       aimmspy against your own AIMMS install and license. PSO-only: it\n"
+        "       does not build or touch a PyPSA network. Configure pso.local.toml\n"
+        "       first (see pso.local.toml.example).\n"
         "\n"
         "  4) Run DoE sanity once (devnet_doe.py)\n"
         "     - Validates the exported DevNet and confirms baseline solve behavior\n"
@@ -180,6 +186,7 @@ def print_header():
         "  Notes:\n"
         "   - (6), (7), and (8) expect the stress workbook/report inputs to exist.\n"
         "   - If plots fail due to missing workbook/sheet, run option (5) first.\n"
+        "\n"
         "\n(Analysis module will be added later.)\n"
     )
 
@@ -191,7 +198,7 @@ def print_menu():
     print("Select an option:")
     print("  1) Generate DevNet CSV templates (devnet_cfg.py)")
     print("  2) Build DevNet SLD (baseline network from CSV config)")
-    print("  3) Build DevNet SLD with Datacenter BYOG (from CSV config)")
+    print("  3) Datacenter case: PyPSA DevNet 6-bus or PSO ERCOT Texas7k")
     print("  4) Load network / sanity checks (devnet_doe.py)")
     print("  5) Find Network Asymptotes (devnet_stress.py)")
     print("  6) Plot: Load vs system metrics (devnet_load_plot.py)")
@@ -201,6 +208,72 @@ def print_menu():
     print(" 10) Plot: PJM_NE 8760 LMP chronology (devnet_pjm_ne_lmp_plot.py)")
     print(" 11) Plot: Journal publication figures (devnet_pub_figs.py)")
     print("  0) Exit")
+
+# ------------------------------------------------------------------------------
+# pick_submenu()
+# Prompts for one of a numbered list of choices; returns the 1-based index, or
+# 0 to go back. Re-asks on anything invalid; a bare Enter takes the default.
+# ------------------------------------------------------------------------------
+def pick_submenu(title: str, choices: list[str], default: int = 1) -> int:
+    while True:
+        print(f"\n{title}")
+
+        for i, label in enumerate(choices, start=1):
+            print(f"  {i}) {label}")
+
+        print("  0) Back to main menu")
+
+        raw = input(f"\nEnter choice [{default}]: ").strip()
+
+        if not raw:
+            return default
+
+        if raw.isdigit() and int(raw) <= len(choices):
+            return int(raw)
+
+        print("\nInvalid choice.")
+
+# ------------------------------------------------------------------------------
+# run_datacenter_case()
+# Option 3: pick the engine route for a datacenter case, then dispatch.
+#
+# PyPSA route -> devnetDC_sld.py, the 6-bus DevNet SLD with Datacenter BYOG.
+# PSO route   -> the ERCOT Texas7k public case (ercot7k_pso.py). PSO-only: no
+#                PyPSA network is built. The stress matrix is not part of this
+#                build and says so rather than being hidden.
+# ------------------------------------------------------------------------------
+def run_datacenter_case() -> None:
+    route = pick_submenu(
+        "Datacenter case -- select engine route:",
+        [
+            "PyPSA: DevNet 6-bus SLD with Datacenter BYOG (devnetDC_sld.py)",
+            "PSO:   ERCOT Texas7k public case (6717 buses)",
+        ],
+    )
+
+    if route == 1:
+        rc = run_script("devnetDC_sld.py")
+        input(f"\nFinished devnetDC_sld.py (exit code {rc}). Press Enter to return to menu...")
+        return
+
+    if route != 2:
+        return
+
+    what = pick_submenu(
+        "PSO route -- ERCOT Texas7k:",
+        [
+            "Run the base case, full cycle (ercot7k_pso.py)",
+            "Run the stress matrix  [NOT YET AVAILABLE]",
+        ],
+    )
+
+    if what == 1:
+        rc = run_script("ercot7k_pso.py")
+        input(f"\nFinished ercot7k_pso.py (exit code {rc}). Press Enter to return to menu...")
+    elif what == 2:
+        print("\nASR-DBG: The Texas7k stress matrix is not part of this build.")
+        print("It arrives with the case-builder work; until then use the base case.\n")
+        input("Press Enter to return to menu...")
 
 # ------------------------------------------------------------------------------
 # main()
@@ -224,8 +297,7 @@ def main():
             rc = run_script("devnet_sld.py")
             input(f"\nFinished devnet_sld.py (exit code {rc}). Press Enter to return to menu...")
         elif choice == "3":
-            rc = run_script("devnetDC_sld.py")
-            input(f"\nFinished devnetDC_sld.py (exit code {rc}). Press Enter to return to menu...")
+            run_datacenter_case()
         elif choice == "4":
             rc = run_script("devnet_doe.py")
             input(f"\nFinished devnet_doe.py (exit code {rc}). Press Enter to return to menu...")
