@@ -31,7 +31,8 @@ if (Get-Command uv -ErrorAction SilentlyContinue) {
     Write-Host "==> uv found -- building envs with uv" -ForegroundColor Cyan
     uv sync
     if ($LASTEXITCODE -ne 0) { throw "uv sync failed" }
-    uv venv .venv-pso
+    # --allow-existing: re-running setup must not fail on its own earlier work
+    uv venv --allow-existing .venv-pso
     if ($LASTEXITCODE -ne 0) { throw "uv venv .venv-pso failed" }
     uv pip install --python .venv-pso $Aimmspy
     if ($LASTEXITCODE -ne 0) { throw "installing $Aimmspy into .venv-pso failed" }
@@ -54,7 +55,9 @@ if (-not (Test-Path $cfg)) {
     Write-Host "==> created pso.local.toml (edit: project, and license_url if academic)" -ForegroundColor Yellow
 }
 if (-not (Select-String -Path $cfg -Pattern '^\s*python\s*=' -Quiet)) {
-    $psoPy = (Join-Path $root ".venv-pso\Scripts\python.exe") -replace '\\','\\'
+    # Forward slashes: the form validated on Windows 11 (see README, "Windows 11
+    # Path Requirement"); doubled backslashes did not work there.
+    $psoPy = (Join-Path $root ".venv-pso\Scripts\python.exe") -replace '\\','/'
     Add-Content $cfg "python = `"$psoPy`""
     Write-Host "==> wired solve interpreter -> $psoPy"
 }

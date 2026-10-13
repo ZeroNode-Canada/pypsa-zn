@@ -21,7 +21,7 @@ AIMMSPY="${AIMMSPY:-aimmspy>=26.1,<26.2}"
 if command -v uv >/dev/null 2>&1; then
     echo "==> uv found -- building envs with uv"
     uv sync
-    uv venv .venv-pso
+    uv venv --allow-existing .venv-pso  # re-running setup must not fail on its own earlier work
     uv pip install --python .venv-pso "$AIMMSPY"
 else
     echo "==> uv not found -- using python -m venv + pip"
