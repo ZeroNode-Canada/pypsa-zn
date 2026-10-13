@@ -23,3 +23,6 @@ ercot7k/*.csv -text
 
 # The mini7k test fixture is cut from that case and carries the same guarantee.
 tests/fixtures/**/*.csv -text
+
+# A shell script checked out with CRLF fails under sh (WSL, Git Bash, Linux).
+*.sh text eol=lf

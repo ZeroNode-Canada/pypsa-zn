@@ -486,8 +486,8 @@ Generated publication artifacts are written to `./pub_figs/`.
 
 ## ERCOT Texas7k PSO Full-Cycle Case (PSO-only track)
 
-A separate, PSO-only track lets you run the public **ERCOT Texas7k** case
-(6717 buses, 9140 branches, 634 injectors) full-cycle through PSO, driven
+A separate, PSO-only track lets you run the public **ERCOT Texas7k 2030** case
+(7132 buses, 9555 branches, 1063 injectors) full-cycle through PSO, driven
 from Python via `aimmspy` and your own AIMMS install/license. It does not
 build or touch a PyPSA network, and it does not modify `lib/devnet_stress_lib.py`
 or `devnet_stress.py` -- it is a sibling to `devnetDC_sld.py`, not a
@@ -498,6 +498,8 @@ ercot7k/                 Texas7k PSO input tables
 pso_config.py            pso.local.toml -> DEVNET_PSO_* env defaults
 pso.local.toml.example   copy to pso.local.toml and edit
 ercot7k_pso.py           the runner (option 3 -> PSO route, in devnet_menu.py)
+setup.ps1 / setup.sh     build .venv and .venv-pso, seed pso.local.toml
+doctor.py                preflight check: run it until it says READY
 ```
 
 ### Setup
@@ -507,13 +509,42 @@ license works -- and a checkout of the PSO model project (`PSO.aimms`), which
 is not part of this repo.
 
 `aimmspy` needs **its own Python environment**: its dependencies force `linopy`
-down and break PyPSA's `n.optimize`, so it cannot share the PyPSA env. Set
-`python` in `pso.local.toml` to that interpreter and the runner re-launches
-itself there, which is what makes the menu entry work.
+down and break PyPSA's `n.optimize`, so it cannot share the PyPSA env. The
+setup script builds both:
 
-Copy `pso.local.toml.example` to `pso.local.toml` (repo root, gitignored) and
-fill in at least `project`. Leave `license_url` commented out to use the
-machine's configured license; `case` defaults to `ercot7k/texas7k.csv`.
+| env | holds | role |
+|---|---|---|
+| `.venv` | PyPSA stack, from `uv.lock` | the menu, DevNet, ercot7k build and tests |
+| `.venv-pso` | `aimmspy` | the PSO solve; `ercot7k_pso.py` re-launches itself here |
+
+``` powershell
+# Windows
+powershell -ExecutionPolicy Bypass -File .\setup.ps1
+```
+``` sh
+# Linux / macOS
+sh setup.sh
+```
+
+It uses [`uv`](https://docs.astral.sh/uv/) when present and falls back to
+`python -m venv` + `pip`. It installs `aimmspy` from the 26.1 line, to match
+AIMMS 26.1: the runner picks the AIMMS install by aimmspy's major.minor. For a
+different AIMMS, pass `-Aimmspy "aimmspy==<version>"` (or `AIMMSPY=...` to
+`setup.sh`), or set `aimms_version` / `aimms_path` in `pso.local.toml`.
+
+The script creates `pso.local.toml` (repo root, gitignored) from the example
+and sets `python` to `.venv-pso`. Fill in at least `project`. Leave
+`license_url` commented out to use the machine's configured license; `case`
+defaults to `ercot7k/texas7k.csv`. Then:
+
+``` powershell
+.\.venv\Scripts\python.exe doctor.py
+```
+
+The doctor checks PyPSA, the solve interpreter, aimmspy, the AIMMS install it
+resolves to, the license, `PSO.aimms` and the case, with a fix hint for each.
+It starts no AIMMS session, so it takes no licence seat. Get it to `READY.`
+before solving.
 
 ### Running it
 

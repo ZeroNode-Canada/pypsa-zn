@@ -1,0 +1,25 @@
+[project]
+name = "pypsa-zn"
+version = "0.0.0"
+description = "DevNet datacenter-BYOG grid model (PyPSA baseline; PSO Texas7k track)"
+requires-python = ">=3.10"
+dependencies = [
+    "pypsa==0.35.2",
+    "numpy",
+    "pandas<3",          # pypsa 0.35.2 plotting breaks on pandas 3.0 StringDtype
+    "matplotlib",
+    "scipy",
+    "networkx",
+    "openpyxl",
+    "highspy",
+]
+
+# NOTE: aimmspy (the PSO solve backend) is intentionally NOT listed here. Its
+# transitive deps conflict with PyPSA's optimizer (they force `linopy` down and
+# break n.optimize), so it must live in a SEPARATE environment (.venv-pso),
+# created by setup.ps1 / setup.sh -- see "Setup" in README.md. Keeping it out of
+# this project keeps .venv (and uv.lock) a clean PyPSA environment.
+
+# This repo is an application/script collection, not an installable package.
+[tool.uv]
+package = false
