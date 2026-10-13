@@ -20,6 +20,10 @@ dependencies = [
 # created by setup.ps1 / setup.sh -- see "Setup" in README.md. Keeping it out of
 # this project keeps .venv (and uv.lock) a clean PyPSA environment.
 
+# The test suite. uv installs the dev group on a plain `uv sync`.
+[dependency-groups]
+dev = ["pytest"]
+
 # This repo is an application/script collection, not an installable package.
 [tool.uv]
 package = false
