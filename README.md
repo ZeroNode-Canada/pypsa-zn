@@ -40,6 +40,61 @@ larger-network studies.
 
 ------------------------------------------------------------------------
 
+# Table of Contents
+- [PyPSA-ZN DevNet --- Datacenter BYOG Grid Modeling](#pypsa-zn-devnet-----datacenter-byog-grid-modeling)
+- [Table of Contents](#table-of-contents)
+  - [Workflow](#workflow)
+  - [Repository Structure](#repository-structure)
+  - [Source-Controlled Core](#source-controlled-core)
+  - [Runtime and Generated Directories](#runtime-and-generated-directories)
+    - [`devnet-sld/` and `devnetDC-sld/`](#devnet-sld-and-devnetdc-sld)
+    - [`stress_out/`](#stress_out)
+    - [`pub_figs/`](#pub_figs)
+  - [Configuration](#configuration)
+    - [Reference DevNet Configuration](#reference-devnet-configuration)
+  - [Building DevNet](#building-devnet)
+    - [Baseline DevNet](#baseline-devnet)
+    - [Datacenter BYOG DevNet](#datacenter-byog-devnet)
+  - [Stress Testing and OPF Results](#stress-testing-and-opf-results)
+    - [Preview and Commit](#preview-and-commit)
+  - [Diagnostic Plots](#diagnostic-plots)
+  - [Publication Figure Workflow](#publication-figure-workflow)
+    - [Experiment Design Workbook](#experiment-design-workbook)
+  - [ERCOT Texas7k PSO Full-Cycle Case](#ercot-texas7k-pso-full-cycle-case)
+    - [PyPSA Route](#pypsa-route)
+    - [PSO/AIMMS Environment Dependencies](#psoaimms-environment-dependencies)
+      - [Create the PSO Virtual Environment](#create-the-pso-virtual-environment)
+      - [Install aimmspy](#install-aimmspy)
+      - [Verify aimmspy Installation](#verify-aimmspy-installation)
+      - [Configure pso.local.toml](#configure-psolocaltoml)
+      - [Optional Interpreter Override — PowerShell](#optional-interpreter-override--powershell)
+      - [Verify PSO Execution](#verify-pso-execution)
+      - [Run Through DevNet Menu](#run-through-devnet-menu)
+    - [PSO Route](#pso-route)
+      - [AIMMS and PSO License Requirement](#aimms-and-pso-license-requirement)
+      - [PSO Configuration](#pso-configuration)
+      - [Windows 11 Paths and Python Environments](#windows-11-paths-and-python-environments)
+      - [Run the ERCOT Texas7k Case](#run-the-ercot-texas7k-case)
+      - [PSO/AIMMS Troubleshooting](#psoaimms-troubleshooting)
+  - [Reference Snapshots for Developers](#reference-snapshots-for-developers)
+  - [Demonstration Framework](#demonstration-framework)
+    - [Building a Custom Presentation Wrapper](#building-a-custom-presentation-wrapper)
+  - [Reference Research Artifacts](#reference-research-artifacts)
+  - [Design Principles](#design-principles)
+  - [Environment and Dependencies](#environment-and-dependencies)
+    - [Tested Python Environment](#tested-python-environment)
+    - [Optional Clean-Slate Virtual Environment](#optional-clean-slate-virtual-environment)
+    - [Capture the Tested Environment Dependency List](#capture-the-tested-environment-dependency-list)
+  - [Release Diligence](#release-diligence)
+  - [Research Use](#research-use)
+  - [Status](#status)
+  - [Next Steps](#next-steps)
+  - [AI Assistance](#ai-assistance)
+  - [License and Attribution](#license-and-attribution)
+    - [PSO / AIMMS Integration](#pso--aimms-integration)
+
+------------------------------------------------------------------------
+
 ## Workflow
 
 The primary workflow is menu-driven through:
@@ -113,6 +168,11 @@ pypsa-zn/
 ├── devnet_callstack.md
 │
 ├── ercot7k_pso.py
+├── pso_preflight.py
+├── ercot7k_build.py
+├── ercot7k_case.py
+├── ercot7k_results.py
+├── ercot7k_sweep.py
 ├── pso_config.py
 ├── pso.local.toml.example
 ├── ercot7k/
@@ -716,110 +776,63 @@ then work with Polaris to obtain the corresponding PSO license.
 Contact the **Polaris Systems Optimization (PSO) development team** for the
 current PSO Installation Guide, PSO software/license, and installation support.
 
-#### Configure `pso.local.toml`
 
-The repository provides:
+#### PSO Configuration
 
-```text
-pso.local.toml.example
-```
-
-Create your machine-specific configuration:
+Create your machine-specific configuration from the supplied template:
 
 ```powershell
 Copy-Item .\pso.local.toml.example .\pso.local.toml
 ```
 
-`pso.local.toml` is a local machine configuration and should not be committed.
+If `pso.local.toml` already exists, edit it rather than overwriting it.
 
-Configure the paths for your local PSO/AIMMS environment, including the
-location of `PSO.aimms` and the Python interpreter containing `aimmspy`.
+Configure the local PSO/AIMMS project path and dedicated `.venv-pso` Python interpreter as documented in [PSO/AIMMS Environment Dependencies](#psoaimms-environment-dependencies).
 
-Example structure:
-
-```toml
-project = "C:/path/to/PSO/PSO.aimms"
-python = "C:/path/to/PSO-python/python.exe"
-aimms_version = "26.1"
-```
-
-If required for the installed academic-license configuration:
+If required by the installed academic/cloud license, configure:
 
 ```toml
 license_url = "wss://..."
 ```
 
-#### Windows 11 Path Requirement
+The `pso.local.toml` file is machine-specific and must not be committed to Git.
 
-**For the currently validated Windows 11 PSO integration, use forward slashes
-(`/`) for paths in `pso.local.toml`.**
+#### Windows 11 Paths and Python Environments
 
-Use:
+Use forward slashes (`/`) in `pso.local.toml` for the validated Windows 11 configuration.
 
-```toml
-project = "C:/path/to/PSO/PSO.aimms"
-python = "C:/path/to/python.exe"
-```
+The PSO route uses a dedicated `.venv-pso` environment containing `aimmspy`, separate from the PyPSA environment.
 
-Do **not** currently use the backslash examples contained in
-`pso.local.toml.example`:
+When invoked through `devnet_menu.py`, `ercot7k_pso.py` automatically re-launches under the configured PSO interpreter when required.
 
-```toml
-project = "C:\\path\\to\\PSO\\PSO.aimms"
-```
+See [PSO/AIMMS Environment Dependencies](#psoaimms-environment-dependencies) for setup and verification.
 
-or:
-
-```toml
-project = 'C:\path\to\PSO\PSO.aimms'
-```
-
-Those forms did not work in the validated Windows 11 integration. The
-`pso.local.toml.example` documentation is pending correction.
-
-#### Separate Python Environments
-
-The PSO route should use a Python environment containing `aimmspy` that is separate from the validated PyPSA environment.
-
-Set its interpreter using:
-
-```toml
-python = "C:/path/to/PSO-python/python.exe"
-```
-
-When Option 3 is launched from the PyPSA environment, `ercot7k_pso.py`
-automatically re-launches itself using this configured interpreter when
-`aimmspy` is not available in the current interpreter. 
 
 #### Run the ERCOT Texas7k Case
 
-Directly:
+Run directly:
 
 ```powershell
 python ercot7k_pso.py
 ```
 
-or:
+Or through the menu:
 
 ```text
 python devnet_menu.py
-      ↓
+     ↓
 3) Datacenter case
-      ↓
+     ↓
 PSO: ERCOT Texas7k public case
-      ↓
+     ↓
+PSO/AIMMS environment preflight
+     ↓
 Run the base case, full cycle
 ```
 
-The runner:
+The menu invokes `pso_preflight.py` to validate the configured interpreter, `aimmspy` availability, and PSO project path before launching the runner.
 
-* Prompts for a run name.
-* Displays a pre-flight configuration summary.
-* Requests confirmation before starting the solve.
-* Executes the configured PSO cycle stack.
-* Writes logs and results into the run directory.
-* Verifies the solve using the resulting served-load data rather than relying
-  only on the AIMMS/PSO return status. 
+The runner prompts for a run name, displays a pre-flight configuration summary, requests confirmation, executes the PSO cycle stack, writes logs/results, and verifies served load.
 
 #### PSO/AIMMS Troubleshooting
 
