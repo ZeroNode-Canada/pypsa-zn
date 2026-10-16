@@ -280,8 +280,32 @@ def run_datacenter_case() -> None:
     )
 
     if what == 1:
+        print("\nPSO/AIMMS Environment Preflight")
+        print("-" * 45)
+        print("Before running the ERCOT Texas7k PSO case,")
+        print("the PSO environment configuration will be validated.")
+        print("See README.md -> PSO/AIMMS Environment Dependencies.\n")
+
+        confirm = input("Proceed with PSO preflight? [Y/N]: ").strip().lower()
+
+        if confirm not in ("y", "yes"):
+            print("\nPSO execution cancelled. Returning to main menu.")
+            input("Press Enter to continue...")
+            return
+
+        rc = run_script("pso_preflight.py")
+
+        if rc != 0:
+            print("\nPSO preflight FAILED.")
+            print("See README.md -> PSO/AIMMS Environment Dependencies.")
+            input("Press Enter to return to main menu...")
+            return
+
         rc = run_script("ercot7k_pso.py")
-        input(f"\nFinished ercot7k_pso.py (exit code {rc}). Press Enter to return to menu...")
+        input(
+            f"\nFinished ercot7k_pso.py (exit code {rc}). "
+            "Press Enter to return to menu..."
+        )
     elif what == 2:
         rc = run_script("ercot7k_build.py")
         input(f"\nFinished ercot7k_build.py (exit code {rc}). Press Enter to return to menu...")
