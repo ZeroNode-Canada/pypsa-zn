@@ -1,80 +1,84 @@
-# ercot7k - Texas7k full-cycle PSO case
+# ercot7k - Texas7k 2030 WA case (per-unit VRE)
 
-A 6717-bus, 9140-branch, 634-injector synthetic ERCOT case (TAMU/Overbye's
-**Texas7k**), converted to PSO-native CSV input tables. This is a **PSO-only**
-case: it is driven straight into PSO through `aimmspy` (see
-`../ercot7k_pso.py`) and never touches PyPSA.
+A 7132-bus, 9555-branch, 1063-injector synthetic ERCOT case built on
+TAMU/Overbye's **Texas7k 2030** network, converted to PSO-native CSV input
+tables. This is a **PSO-only** case: it is driven straight into PSO through
+`aimmspy` (see `../ercot7k_pso.py`) and never touches PyPSA.
+
+Until 2026-10-09 this directory held the 2018 `texas7k_fullcycle` case (6717
+buses, 634 injectors, a 2018 April week, SC -> DA -> RT). Every stress and
+datacenter number recorded before that date was measured on that case, not on
+this one.
 
 ## What's here
 
-- `texas7k*.csv` (24 files, ~4.89 MB) - the full set of PSO input tables plus
+- `texas7k*.csv` (29 files, ~44.5 MB) - the full set of PSO input tables plus
   `texas7k.csv`, the options/control file (`SelectedDataFile` target).
 
-These tables are copied byte-identical from the `ercot-public-dataset` repo's
-`pso/texas7k_fullcycle/` case directory. The `results/` and `runs/`
-subdirectories from that source are **not** included here - this case is
-meant to be solved locally, not shipped with pre-solved output.
+These tables are byte-identical to `texas7k2030_ercot_perunit`, built in the
+`ercot-public-dataset` repo from commit `7801163`. That is the repo's
+`pso/texas7k2030_ercot` case (as of `37b5e2e`, PR #43) with one table replaced:
+`texas7k_SCH_TMP1.csv`, whose wind and solar availability comes per unit from
+ERCOT's 60-day disclosures instead of regional series allocated by capacity
+share. Its manifest and build notes are in `../ercot7k_geo/`.
+
+Bus coordinates are deliberately NOT in this directory: every CSV here is read
+as a PSO table and copied into each derived layer. They are in
+`../ercot7k_geo/texas7k_bus_coords.csv` (enode, busnum, lat, lon, zone), all
+7132 buses, taken from the 2030 AUX's substation coordinates.
 
 ## The case
 
-- **Network:** 6717 buses, 9140 branches, 634 injectors (generators).
-- **Horizon:** `2018.04.09 00:00` -> `2018.04.16 00:00`, hourly (168 hours),
-  per `texas7k_MDL_ID.csv`.
-- **Cycle stack:** `SC` (security-constrained, 24 h lead) -> `DA`
-  (day-ahead, 24 h lead) -> `RT` (real-time, 1 h), per `texas7k_CYC_ID.csv`.
-- **Scale:** roughly 188 solves across the horizon / cycle stack, ~3-4
-  minutes wall clock on PSO 3.3 (BETA 2026-07-14) + AIMMS 26.1.4.12 with
-  CPLEX.
-- **Results:** a full run writes ~47 result files, ~459 MB total. These are
-  **not** committed to the repo - run the case locally and inspect them from
-  the run's own results directory. Peak served load on the RT cycle is
-  ~46,795 MW (this is a spring week; do not expect a summer-peak figure).
+- **Network:** 7132 buses, 9555 branches, 1063 injectors, 24 storage units,
+  8 weather-zone areas.
+- **Horizon:** `2026.06.15 00:00` -> `2026.06.22 00:00`, hourly (168 hours),
+  inside a `2026.06.12` -> `2026.06.28` model window, per `texas7k_MDL_ID.csv`.
+- **Cycle stack:** `SC` -> `SCEsr` -> `WA` -> `DA` -> `RT`, per
+  `texas7k_CYC_ID.csv`.
+- **Results:** a full run writes ~54 result files, ~850 MB. They are **not**
+  committed - run the case locally.
 
-## Data vintage - read this before interpreting results
-
-This is an **illustrative synthetic blend, not a replay of any single year**:
-
-- grid topology and generation fleet: roughly 2021
-- offer economics: derived from roughly 2021 ERCOT SCED data
-- load and renewable profiles: **2018** ARPA-E PERFORM weather/load series
-
-So the hours are 2018 weather driving a 2021 fleet at 2021 offer prices. It is
-built for demonstration and training, and it is not a hindcast.
-
-## Known issues
-
-- **Negative offers.** `San Miguel 1` offers at about -$249/MWh, and 468
-  injector-rows carry a negative `CostTotal`. This is the first thing a
-  power-markets reader tends to find in an LMP plot, so it is called out here
-  rather than left to be discovered. A fix is in progress upstream; until then,
-  treat the low tail of the price surface with suspicion.
+`results_ED_Ara.csv` reports the eight zones AND area `0`, the system
+aggregate. Sum the zones or read area `0`, never both.
 
 ## Known-good baseline
 
-A clean run of this case should reproduce:
+One run, 2026-10-09, local `PSO-3.3-Main` + AIMMS 26.1.4.12, 6m09s:
 
-| Check | Value | Reproducible? |
-|---|---|---|
-| Solves | 190, all `Optimal` (`results_MC_Solution.csv`) | exactly |
-| Peak RT area load | 46,794.5 MW at interval 184 (`results_ED_Ara.csv`) | exactly |
-| SC cycle cost | 11,727,676.8 (`results_MC_Hrzn.csv`, `DeltaCost` summed over `cyc=SC`) | exactly |
-| DA cycle cost | about 20.3M | within the MIP gap |
-| RT cycle cost | about 12.0M | within the MIP gap |
+| Check | Value |
+|---|---|
+| Solves | 221, all `Optimal` (`results_MC_Solution.csv`) |
+| Penalty | 0.00 on every cycle (`results_MC_Hrzn.csv`, `DeltaPenalty`) |
+| Peak RT load | 82,591.9 MW at interval 161 (`results_ED_Ara.csv`, area `0`) |
+| SC cycle cost | 231,236,413.4 (`DeltaCost` summed over `cyc=SC`) |
+| SCEsr cycle cost | 154,948,993.8 |
+| WA cycle cost | 155,711,676.0 |
+| DA cycle cost | 159,776,821.1 |
+| RT cycle cost | 124,640,771.0 |
 
-**Do not expect the DA and RT costs to match to the digit across builds.** DA
-carries about 10,700 integer variables and is solved to `MipGap` 0.005, so a
-different PSO build or solver version lands on a different incumbent inside
-that gap - the runs above differ by 0.4%. RT is an LP but inherits DA's
-commitment through the cycle chain, so it carries the same variation (0.8%
-observed). SC is an LP with nothing upstream, which is why it is bit-exact and
-is the better regression check of the three.
+The solve count matches the source build's own run (221, PSO
+3.3.0-nightly.20261007). How far the costs move across PSO builds has NOT been
+measured on this case; on the 2018 case DA and RT moved 0.4-0.8% between builds
+(MIP gap) while SC was bit-exact. A solve count or peak load that differs at
+all means the run is wrong; treat cost differences under ~1% as build noise
+until measured otherwise.
 
-If the solve count, the optimal status or the peak load differ at all, or the
-costs move by more than about 1%, something is wrong with the run and no
-interpretation is worth doing yet.
+For comparison, the same case with REGIONAL VRE (`37b5e2e` as shipped) gave 223
+solves, all `Optimal`, zero penalty, the same 82,591.9 MW peak, and SC
+220,387,837.4 / DA 152,279,423.3 / RT 125,425,602.6.
 
-Note `ED_Ara.Load` is fixed input load and does not fall when load is shed, so
-it confirms the case was read - not that it was served.
+## Known issues
+
+Carried from the source build notes, not re-measured here:
+
+- The DA cycle drives batteries to full at every midnight.
+- Placed dispatchable capacity is ~75% of June coincident peak, with no
+  forced-outage derate, and June excludes the annual peak. Relevant if load is
+  stressed upward.
+- On the actual (SCED) side, 71,875 MWh over 7,329 unit-hours is clipped at
+  each unit's own MaxMw.
+- 313 VRE settlement points with no usable plant identity sit at
+  region-consistent but not real locations.
 
 ## Running it
 
@@ -90,12 +94,8 @@ section in the top-level `README.md`. In short:
 
 The Texas7k network is TAMU/Overbye synthetic data
 (electricgrids.engr.tamu.edu), "free for commercial or non-commercial use,"
-with a requested registration + paper citation. Several other inputs (ARPA-E
-PERFORM forecast/actual series, EIA, HIFLD) carry their own attribution
-requirements, mostly CC-BY.
-
-Full field-level provenance and the complete attribution block live in the
-source dataset repo (`ercot-public-dataset`: `SOURCE.md`, `LICENSE-DATA.md`,
-`pso/INPUT_SOURCES.md`) and are **not** duplicated here yet. They follow in a
-separate change. Read them before publishing results or redistributing this
-case.
+with a requested registration + paper citation. Load, offers and VRE
+availability derive from ERCOT public reports. Full field-level provenance and
+the attribution block live in the source dataset repo (`ercot-public-dataset`:
+`SOURCE.md`, `LICENSE-DATA.md`, `pso/INPUT_SOURCES.md`). Read them before
+publishing results or redistributing this case.

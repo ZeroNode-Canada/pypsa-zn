@@ -1,0 +1,10 @@
+Area,Name,ParentArea,Balance,External
+0,System,,0,0
+Coast,Coast,0,0,0
+East,East,0,0,0
+Far West,Far West,0,0,0
+North,North,0,0,0
+North Central,North Central,0,0,0
+South,South,0,0,0
+South Central,South Central,0,0,0
+West,West,0,0,0

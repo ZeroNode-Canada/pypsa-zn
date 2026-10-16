@@ -1,0 +1,7 @@
+Schedule,RepeatTime,StepChange,Cycle,Periodic,UseMin,UseMax,UseFirst,UseLast,Report
+Load_fcst,12,1,,0,0,0,0,0,0
+Load_act,12,1,,0,0,0,0,0,0
+N220149_1_fcst,12,1,,0,0,0,0,0,0
+N220149_1_act,12,1,,0,0,0,0,0,0
+N220151_1_fcst,12,1,,0,0,0,0,0,0
+N220151_1_act,12,1,,0,0,0,0,0,0

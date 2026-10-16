@@ -1,0 +1,2 @@
+Reservoir,MinStorage,MaxStorage,EfficiencyIn,EfficiencyOut,SelfDischarge,Storage0,TimeWindow,MaxRecharge,MaxDischarge,MaxCycles,RechargeCost,DischargeCost,CostFactor,CostAdder,StorageCost
+DC1_ESR,0.000,1000.000,0.9220,0.9220,0.000,500.000,,,,,0.000,0.000,,,

@@ -1,0 +1,4 @@
+Scenario,ReserveType,Area,Requirement,Enforce,ScaleFactor,Schedule,Sequence
+ScnSC,OpRsv,0,3500.000,,,OpRsv_req,
+ScnSCEsr,OpRsv,0,3500.000,,,OpRsv_req,
+ScnRT,OpRsv,0,0.000,1,,,

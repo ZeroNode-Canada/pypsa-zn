@@ -1,4 +1,6 @@
 Cycle,Scenario,Weight,Reference
 SC,ScnSC,1.00000000,0
+SCEsr,ScnSCEsr,1.00000000,0
+WA,ScnWA,1.00000000,0
 DA,ScnDA,1.00000000,0
 RT,ScnRT,1.00000000,0

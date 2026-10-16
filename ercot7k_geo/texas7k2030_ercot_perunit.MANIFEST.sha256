@@ -1,0 +1,54 @@
+# SHA-256 of every PSO input table in this case directory.
+#
+# Digests are over LF-NORMALISED bytes (this repo checks out CRLF on Windows -- see
+# .gitattributes), so they are identical on every platform.
+#
+# Verify:     python pso/tools/manifest.py --case-dir pso/texas7k2030_ercot_perunit
+#             (or `pytest pso/test_manifest.py`, which always runs -- no data bundle needed)
+# Regenerate: python pso/tools/manifest.py --case-dir pso/texas7k2030_ercot_perunit --write
+#             (written automatically at the end of every build_texas7k_case.py run)
+#
+# SCOPE: this proves the tables have not been altered since they were built. It does NOT prove
+# they were built from the right constants -- only test_rebuild_reproduces_every_committed_table
+# does that, and it needs the gitignored source bundle.
+#
+# variant: REALISTIC_UC
+# source 4754d2b4dd2abaec15dd80a3fa08ebadfbf9f4be0b992babd14083af596986c1  Texas7k_2030_20220923.RAW
+# source e74126c9d123244282ff60e2dcc98d099bd51271b8b74b57d91c38ce1f0b9729  Texas7k_2030_20220923.AUX
+# source aef45fcef0cf36576e3ffb0afbd69972cb911e236b621ccf007d8f2a2eb8bb62  texas7k_gen_costs.csv
+# source bdf190ca61bc2b9302ab41d300659ad32803dc3610cb98635c7367f8a42e9c05  texas7k_gen_curves.csv
+# source 0195a700937dedd70936bb7f83b7f3feed20707b3fbea92efe0cc92a2165dbb2  ercot_perform_week_2018-04-09_384h.csv
+# source 80dca5d85acf0d2a29bf80eb14bd03738724afc7871006359c5de8b1f2080cc1  perform_site_cf_2018-04-09_384h.csv
+# source de1625c58d709a1a570c1e127533fa9b6c2b47f4b8078af562608aa7db9601d8  texas7k_vre_gens_2030.csv
+# source 668df003d5cb9ba5e5ad82c7ffd835b52df07159a6e6c2377cd5195889941132  perform_to_texas7k_vre_map_2030.csv
+# source 51fbfc156a4b76c9d924d406a4ea90994e3b0bf703e480eca457d4db472129b9  ercot_load_by_zone_2026-06-12_16d.csv
+#
+25d09c77a68f3e37378b4e9ec744c07196c40d72f9a9c7ffb8a6740e98a684b9  texas7k.csv
+d9de05bbb49de95b1acf406b2fcd819c78dcfd05e688248499a9d0b632b9a81b  texas7k_ARA_ID.csv
+32da5386e000e98b0495fdeeb188955ff2d229f961af8fc9e9fde7524461bed6  texas7k_BRN_ID.csv
+90c1d5cc3693f4c8024c56f53106db6cf666fd22c655b98a8428b42cee7e1bd8  texas7k_CCV_ATT.csv
+358548814aef1438ab1ecbcf5e4549d20d64c41dd5a9ffdcddc1f5a5c2f17470  texas7k_CCV_PNT.csv
+147d37a54310138cf5054528a5332090c3ee49dd7d1788e6499d407423cd1f4e  texas7k_CYC_ARA_CMT.csv
+e14efafe7799e78aca3eee63e077db2e6b20551769673198e542e7e6d2918c79  texas7k_CYC_ESR.csv
+96b09b5b1d30611264983b9eaec564caf6d6bed6960a55fcefbe4be7091aa14c  texas7k_CYC_ID.csv
+e80295e4d3425b13d81aa648a46a15fae761a376d90f32db299e16acb771e5d0  texas7k_CYC_INJ_CCV.csv
+3640cd42261cbfc56ebc6fbe743fe924eaf8b45d7e07c695b882674eafa916ad  texas7k_CYC_INJ_CMT.csv
+0b743fecc32013381f357e334267c0894d8ade4e6d2c5a6af7ba233fd858b990  texas7k_CYC_PRD_ID.csv
+9b455e6ff462350c026688142f8c62b49475aaecb478e039957642dc08d053f3  texas7k_CYC_SAI.csv
+a80106279d71bf68d7469a280ab9d0de45fdcaab55c1785f8a05f6186a715e9a  texas7k_CYC_SCN.csv
+6c492792afaac9a38a8293fb2055b19dd51936af492a07b6c740f80c2712b782  texas7k_ESR_ID.csv
+c320521815e90965c47f711f0f0bb158d57c3d6cdbd49e122ca88c64e3d6556b  texas7k_INJ_CMT.csv
+25cb4e3709c09e65a8b5ac919037519cfec9aa6cf53fabc1fa51595d3cc22aab  texas7k_INJ_ID.csv
+4d71c0c1bda1f27e20b47daf84c379c1078af01894f183e409f509afca3bc860  texas7k_INJ_NET.csv
+9c2f32e1e6e6e13e2be61c41ed840491ebcd74cdc68de7a82ec79de6e6dcbdc9  texas7k_INJ_STG_CMT.csv
+5de962739deae817942e21504c9510408a7d55ea0bfda215652dfcb83ba0ed75  texas7k_MDL_ID.csv
+9da3b9a2ecb191cc7dd4bfc94edd36af648267f7c04d90f6f85037ad75859f8e  texas7k_NDE_ID.csv
+841af315165837e32706e839d246acac78c4159d6f9188974049a7caab47ba45  texas7k_RSV_ARA.csv
+9c0d4b4c166c07fb5dc5ae65ef64f012a52b8e32ad2c3dfb29955d2b3052611c  texas7k_RSV_ID.csv
+666d1bde5f3942b145542c047412039c5e81b035ecf5be1d6b48d5aa73f3e2e7  texas7k_RSV_INJ.csv
+006b134038282a966869c6855e6b05830e6de32818ba33d202cfc15ce8fe1940  texas7k_SCH_ATT.csv
+c1d5e9fec984530cf639e5a0172d9113572d6267f600d1e25efce53ac4379800  texas7k_SCH_TMP1.csv
+33dc2da99be566ff1cb7fd90d288e9016e33feb56b4189231e3e58c908caf67a  texas7k_SCN_ARA_LOD.csv
+8406388d9435f908b906e5e58e5e0e4051a4c06bde7498641979235bd2d67221  texas7k_SCN_INJ_MAX.csv
+e38a8f4902a802202a3b163b058c31527d79a4257647eb3efb5e893010d95883  texas7k_SCN_RSV_ARA.csv
+6f81d1b263f27c320312746f24cdf0f5088f4b9a6818831e193ef7ab57691c12  texas7k_STE_NDE.csv

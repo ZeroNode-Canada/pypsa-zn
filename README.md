@@ -529,6 +529,140 @@ PyPSA DevNetDC network
 This is the DevNet research workflow used by `devnet_stress.py`,
 the diagnostic plotting tools, and `devnet_pub_figs.py`.
 
+### PSO/AIMMS Environment Dependencies
+
+The PSO ERCOT Texas7k workflow requires:
+
+- A separately installed and licensed AIMMS environment (26.1.x tested).
+- The Polaris PSO model project (`PSO.aimms`), obtained separately from Polaris.
+- The `aimmspy` Python package.
+- A dedicated Python virtual environment (`.venv-pso`).
+
+**Important:** `aimmspy` must remain separate from the PyPSA environment because of incompatible optimization dependencies. Do not install `aimmspy` into the existing PyPSA environment.
+
+#### Create the PSO Virtual Environment
+
+Open PowerShell in the `pypsa-zn` repository root:
+
+```powershell
+cd "C:\path\to\your\pypsa-zn"
+python -m venv .venv-pso
+```
+
+This creates:
+
+```text
+pypsa-zn/
+├── .venv/           # Optional PyPSA environment
+└── .venv-pso/       # PSO/AIMMS Python environment
+```
+
+The `.venv-pso` directory is local to the repository and should not be committed to Git.
+
+#### Install aimmspy
+
+From the repository root:
+
+```powershell
+.\.venv-pso\Scripts\python.exe -m pip install --upgrade pip
+.\.venv-pso\Scripts\python.exe -m pip install aimmspy
+```
+
+#### Verify aimmspy Installation
+
+```powershell
+.\.venv-pso\Scripts\python.exe -c "import aimmspy; print('aimmspy OK:', aimmspy.__version__)"
+```
+
+Example validated output:
+
+```text
+aimmspy OK: 26.1.8.3
+```
+
+This confirms that `aimmspy` is installed in the dedicated PSO environment.
+
+#### Configure pso.local.toml
+
+Copy the supplied configuration template:
+
+```powershell
+Copy-Item pso.local.toml.example pso.local.toml
+```
+
+If `pso.local.toml` already exists, retain and edit it rather than overwriting it.
+
+Configure at least the following entries:
+
+```toml
+project = "C:/path/to/PSO/PSO.aimms"
+python = "C:/path/to/pypsa-zn/.venv-pso/Scripts/python.exe"
+```
+
+**Windows path convention:** Use forward slashes (`/`) in the TOML path strings.
+
+The `python` path must point to the `.venv-pso` environment created above, under the actual repository directory.
+
+For example, if the repository is located at:
+
+```text
+C:\Development\pypsa-zn
+```
+
+then configure:
+
+```toml
+python = "C:/Development/pypsa-zn/.venv-pso/Scripts/python.exe"
+```
+
+The `project` entry must point to the separately installed Polaris PSO AIMMS project.
+
+Leave `license_url` commented out when using an existing machine-configured AIMMS license.
+
+#### Optional Interpreter Override — PowerShell
+
+The PSO runner reads the configured `python` entry from `pso.local.toml` through `pso_config.py`.
+
+Therefore, the following environment-variable override is **not required** when `pso.local.toml` is correctly configured:
+
+```powershell
+$env:DEVNET_PSO_PYTHON = (Resolve-Path ".\.venv-pso\Scripts\python.exe").Path
+```
+
+This PowerShell command is useful only for troubleshooting or temporarily overriding the configured PSO interpreter.
+
+An explicitly set `DEVNET_PSO_PYTHON` environment variable takes precedence over the corresponding `pso.local.toml` entry.
+
+#### Verify PSO Execution
+
+From the repository root:
+
+```powershell
+python ercot7k_pso.py
+```
+
+This directly tests the PSO runner, bypassing `devnet_menu.py`.
+
+A successful run should invoke AIMMS/CPLEX and generate the ERCOT Texas7k optimization results.
+
+#### Run Through DevNet Menu
+
+```powershell
+python devnet_menu.py
+```
+
+Select:
+
+```text
+3) Datacenter case -- choose the engine route
+   → PSO route
+   → Run the base case, full cycle
+```
+
+The menu invokes `ercot7k_pso.py`, which uses the configured `.venv-pso` interpreter for PSO execution.
+
+**Validated configuration:** Windows 11, Python 3.13, `aimmspy 26.1.8.3`, AIMMS 26.1.x, with 221/221 optimal solves in the ERCOT Texas7k full-cycle case.
+
 ### PSO Route
 
 The PSO route runs the public **ERCOT Texas7k** case (6717 buses) through
@@ -865,7 +999,9 @@ Preliminary Linux validation has also been performed on:
 
 Primary Python dependencies include PyPSA, pandas, numpy, matplotlib, openpyxl, scipy, networkx, and HiGHS / `highspy`.
 
-Use the same Python environment for the complete workflow. `devnet_menu.py` launches child scripts using the active Python interpreter.
+The PyPSA DevNet workflow uses the active Python interpreter. The PSO ERCOT Texas7k workflow requires a separate `.venv-pso` environment containing `aimmspy`, configured through `pso.local.toml`.
+
+See [PSO/AIMMS Environment Dependencies](#psoaimms-environment-dependencies) for installation and configuration.
 
 ### Tested Python Environment
 

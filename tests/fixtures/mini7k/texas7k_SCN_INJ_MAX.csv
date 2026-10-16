@@ -1,0 +1,5 @@
+Scenario,Injector,MaxMw,Enforce,ScaleFactor,Schedule,Sequence
+0,N220149_1,,,,N220149_1_fcst,
+0,N220151_1,,,,N220151_1_fcst,
+ScnRT,N220149_1,,,,N220149_1_act,
+ScnRT,N220151_1,,,,N220151_1_act,

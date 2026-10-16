@@ -157,6 +157,12 @@ def print_header():
         "       aimmspy against your own AIMMS install and license. PSO-only: it\n"
         "       does not build or touch a PyPSA network. Configure pso.local.toml\n"
         "       first (see pso.local.toml.example).\n"
+        "       The same route builds a derived case layer (ercot7k_build.py):\n"
+        "       it adds a datacenter (fixed load + BYOG) or a stress lever to the\n"
+        "       immutable ercot7k/ base, writing a new case under ercot7k-derived/.\n"
+        "       Run ercot7k_build.py --init once to create ercot7k_config/*.csv,\n"
+        "       edit them, then build; it prints the case = \"...\" line to paste\n"
+        "       into pso.local.toml before running the case.\n"
         "\n"
         "  4) Run DoE sanity once (devnet_doe.py)\n"
         "     - Validates the exported DevNet and confirms baseline solve behavior\n"
@@ -238,9 +244,14 @@ def pick_submenu(title: str, choices: list[str], default: int = 1) -> int:
 # Option 3: pick the engine route for a datacenter case, then dispatch.
 #
 # PyPSA route -> devnetDC_sld.py, the 6-bus DevNet SLD with Datacenter BYOG.
-# PSO route   -> the ERCOT Texas7k public case (ercot7k_pso.py). PSO-only: no
-#                PyPSA network is built. The stress matrix is not part of this
-#                build and says so rather than being hidden.
+# PSO route   -> the ERCOT Texas7k public case: run it (ercot7k_pso.py) or build
+#                a derived case layer on top of the immutable base
+#                (ercot7k_build.py). PSO-only: no PyPSA network is built. The
+#                stress matrix is not part of this build and says so rather than
+#                being hidden.
+#
+#                The builder lives here rather than at a top level of its own so
+#                that every PSO entry point sits behind the one engine route.
 # ------------------------------------------------------------------------------
 def run_datacenter_case() -> None:
     route = pick_submenu(
@@ -263,15 +274,43 @@ def run_datacenter_case() -> None:
         "PSO route -- ERCOT Texas7k:",
         [
             "Run the base case, full cycle (ercot7k_pso.py)",
+            "Build a derived case layer (ercot7k_build.py)",
             "Run the stress matrix  [NOT YET AVAILABLE]",
         ],
     )
 
     if what == 1:
+        print("\nPSO/AIMMS Environment Preflight")
+        print("-" * 45)
+        print("Before running the ERCOT Texas7k PSO case,")
+        print("the PSO environment configuration will be validated.")
+        print("See README.md -> PSO/AIMMS Environment Dependencies.\n")
+
+        confirm = input("Proceed with PSO preflight? [Y/N]: ").strip().lower()
+
+        if confirm not in ("y", "yes"):
+            print("\nPSO execution cancelled. Returning to main menu.")
+            input("Press Enter to continue...")
+            return
+
+        rc = run_script("pso_preflight.py")
+
+        if rc != 0:
+            print("\nPSO preflight FAILED.")
+            print("See README.md -> PSO/AIMMS Environment Dependencies.")
+            input("Press Enter to return to main menu...")
+            return
+
         rc = run_script("ercot7k_pso.py")
-        input(f"\nFinished ercot7k_pso.py (exit code {rc}). Press Enter to return to menu...")
+        input(
+            f"\nFinished ercot7k_pso.py (exit code {rc}). "
+            "Press Enter to return to menu..."
+        )
     elif what == 2:
-        print("\nASR-DBG: The Texas7k stress matrix is not part of this build.")
+        rc = run_script("ercot7k_build.py")
+        input(f"\nFinished ercot7k_build.py (exit code {rc}). Press Enter to return to menu...")
+    elif what == 3:
+        print("\nAMW-DBG: The Texas7k stress matrix is not part of this build.")
         print("It arrives with the case-builder work; until then use the base case.\n")
         input("Press Enter to return to menu...")
 

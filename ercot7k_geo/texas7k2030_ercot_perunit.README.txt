@@ -1,0 +1,75 @@
+ercot_texas7k2030_ercot_20261009_perunit
+========================================
+
+PSO case: texas7k2030_ercot_perunit     Built 2026-10-09 from repo commit 7801163
+Window:   2026-06-12 .. 2026-06-28  (384 h = 16 days; StartDate 06-15, StopDate 06-22)
+
+NOTE ON SCOPE: this is the SIXTEEN-DAY June window, not a month and not a year.
+It is the existing base-case window, used because it needed no new load fetch.
+
+
+WHAT IS NEW
+-----------
+Wind and solar availability now comes from PER-UNIT HSL in ERCOT's 60-day
+disclosures, on BOTH scenarios, instead of regional series allocated to units by
+capacity share:
+
+    DA forecast   60-Day DAM disclosure   (NP3-966-ER, MIS report type 13051)
+    actual        60-Day SCED disclosure  (NP3-965-ER, MIS report type 13052)
+
+The DAM HSL is the day-ahead vintage: it IS the COP highSustainedLimit at DAM
+close, an identity verified on all 32,520 resource-hours.
+
+Coverage, measured over 671 VRE injectors x 384 periods:
+
+    DAM forecast    257,511 / 257,664 unit-periods     100.0% of 70,447.6 MW
+    SCED actual     257,664 / 257,664 unit-periods     100.0% of 70,447.6 MW
+
+This removes the regional-allocation step, which was the project's largest
+synthetic claim (85.7% of solar and 43.5% of wind capacity were assigned a
+synthetic weather region).
+
+
+THE RESULT
+----------
+Solves at $0.00 total penalty. All 221 solves Optimal.
+Run 01M4GZ57Y9M4TS658BVA18FZH8, PSO 3.3.0-nightly.20261007.4c08ad2.
+
+    cycle   solves   s/solve
+    SC          26      0.40
+    SCEsr        9      2.45
+    WA           9      4.68
+    DA           9      9.97
+    RT         168      0.03
+
+The point is NOT the system totals, which barely move. It is the error structure:
+
+    system VRE energy        forecast -3.8%,  actual +3.1%
+    aggregate fcst/act bias  ~-9%  ->  ~-2.5%
+    sum|act-fcst| per unit-hour   1,871,576  ->  3,201,156 MWh   (+71%)
+
+Regional allocation gave every unit in a weather region the same shape, so its
+forecast error largely cancelled WITHIN the region. The old number was
+substantially an artefact of the allocation; this one is a real unit-level
+day-ahead-to-real-time availability error.
+
+Against the committed base case, exactly ONE table differs: SCH_TMP1. All 28
+others are byte-identical, including every network, fleet, cycle and reserve
+table, and also SCH_ATT and SCN_INJ_MAX. Only schedule VALUES move.
+
+
+CAVEATS, STATED
+---------------
+* The D-12 cap now actually binds: 71,875 MWh / 7,329 unit-hours clipped, on the
+  SCED side only. DAM clips exactly zero, which is structural -- the per-unit cap
+  IS the max HSL demonstrated over this same window, so DAM cannot exceed it.
+* SCED coverage is 100% on this window, so the fallback-to-regional path is NOT
+  exercised here at all; it rests on synthetic test fixtures.
+* DA at 9.97 s/horizon vs the previous 13.53 s was measured on a DIFFERENT PSO
+  nightly, so it is not attributable to this change.
+* Resource adequacy is a known property of the roster, not a finding about the
+  network: placed dispatchable capacity is ~75% of June coincident peak, hsl_max_mw
+  carries no forced-outage derate, and the June window excludes the annual peak.
+* Individual VRE plants are at region-consistent but not real locations for the
+  313 settlement points with no usable plant identity.
+* Branch floor list remains CLOSED at 70 entries.

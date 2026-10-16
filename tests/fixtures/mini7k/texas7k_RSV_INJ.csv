@@ -1,0 +1,4 @@
+ReserveType,Injector,MaxReserve,ReduceRamp,Cost
+OpRsv,N111180_1,746.000,0,
+OpRsv,N111181_1,749.000,0,
+OpRsv,N111333_1,275.000,0,

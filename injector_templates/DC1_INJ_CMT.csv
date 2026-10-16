@@ -1,0 +1,2 @@
+Injector,MinDispatch,MinOn,MinOff,MinTime,BaseCost,DefaultMustRun,HotStartCost,WarmStartCost,ColdStartCost,TimeToWarm,TimeToCold,HotUpTime,WarmUpTime,ColdUpTime
+DC1_CT,100.000,1,1,0,0,0,1025.000,1025.000,1025.000,2,3,0.25,0.25,0.25

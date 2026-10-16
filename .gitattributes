@@ -1,0 +1,25 @@
+# ------------------------------------------------------------------------------
+# .gitattributes
+#
+# The ercot7k/ case is DATA, and its bytes are the payload rather than a
+# rendering of it. ercot7k_case.py is a byte-fidelity delta writer: it hashes
+# every file, chains those hashes across derived layers, and refuses to build on
+# a parent whose bytes moved. A checkout that "helpfully" rewrites line endings
+# breaks that chain and changes the case PSO is handed.
+#
+# So the case is marked -text: git stores and checks out those bytes verbatim,
+# on every platform, whatever the user's core.autocrlf happens to be.
+#
+# This is not hypothetical, and eol=lf would have been the wrong fix. MEASURED
+# against the upstream public dataset: 23 of the 24 case CSVs are LF, and
+# texas7k_CYC_SAI.csv is genuinely CRLF (163 bytes, 4 CRLF). Committed under
+# core.autocrlf=true it was normalized to 159 bytes in the index, so the repo
+# had already lost those 4 bytes -- a Windows clone reconstructed them by
+# accident and a Linux or container clone did not, which made the case itself
+# depend on who cloned it. Pinning eol=lf would have cemented the loss;
+# -text keeps each file exactly as committed.
+# ------------------------------------------------------------------------------
+ercot7k/*.csv -text
+
+# The mini7k test fixture is cut from that case and carries the same guarantee.
+tests/fixtures/**/*.csv -text
