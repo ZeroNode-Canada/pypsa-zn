@@ -79,6 +79,7 @@ import html
 import math
 import re
 import sys
+import shutil
 import textwrap
 from pathlib import Path
 
@@ -94,6 +95,12 @@ import openpyxl
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_XLSX = SCRIPT_DIR / "devnet-stress-vectors" / "devnetDC_sysdsg.xlsx"
 DEFAULT_OUTDIR = SCRIPT_DIR / "pub_figs"
+
+# Journal publication snapshot configuration.
+JOURNAL_XLSX_REL = Path("devnet-stress-vectors") / "devnetDC_sysdsg.xlsx"
+JOURNAL_SLD_REL = Path("devnetDC-sld")
+JOURNAL_REPORT_REL = JOURNAL_SLD_REL / "stress_out" / "index.html"
+JOURNAL_OUTDIR_REL = Path("pub_figs")
 
 EVENT_SHEET_NAME = "devnetDC_dsg"
 
@@ -212,21 +219,17 @@ def resolve_report_path(
         "/",
     )
 
-    if raw.startswith(
-        ("~\\", "~/")
-    ):
 
-        relative = raw[2:]
+    if raw.startswith(("~\\", "~/")):
+        relative = raw[2:].replace("\\", "/")
 
-        relative = relative.replace(
-            "\\",
-            "/",
-        )
+        # The workbook is stored under:
+        # <project-root>/devnet-stress-vectors/devnetDC_sysdsg.xlsx
+        # Resolve ~/ relative to that project root.
+        project_root = workbook_path.parent.parent
 
-        return (
-            SCRIPT_DIR
-            / relative
-        ).resolve()
+        return (project_root / relative).resolve()
+
 
     normalized = raw.replace(
         "\\",
@@ -252,6 +255,148 @@ def resolve_report_path(
 def confirm(prompt):
     ans = input(f"{prompt} (Y/N): ").strip().lower()
     return ans in ("y", "yes")
+
+
+# ------------------------------------------------------------------------------
+# prompt_journal_root()
+# Requests the journal publication directory from the researcher.
+# ------------------------------------------------------------------------------
+def prompt_journal_root() -> Path:
+    while True:
+        raw = input(
+            "\nEnter journal publication directory "
+            "(blank to cancel): "
+        ).strip().strip('"')
+
+        if not raw:
+            raise SystemExit("Journal publication cancelled.")
+
+        root = Path(raw).expanduser().resolve()
+
+        if root.is_dir():
+            return root
+
+        print(f"Directory not found:\n\t{root}")
+
+# ------------------------------------------------------------------------------
+# prepare_journal_snapshot()
+# Validates the journal results snapshot and prepares the publication workbook.
+# Existing journal results are never overwritten or regenerated.
+# ------------------------------------------------------------------------------
+def prepare_journal_snapshot(root: Path) -> Path:
+    source_xlsx = DEFAULT_XLSX
+
+    target_xlsx = root / JOURNAL_XLSX_REL
+    target_sld = root / JOURNAL_SLD_REL
+    report = root / JOURNAL_REPORT_REL
+
+    # ------------------------------------------------------------------
+    # Validate journal DevNetDC results snapshot.
+    # ------------------------------------------------------------------
+    if not target_sld.is_dir() or not report.is_file():
+        print("\nASR-ERR: Journal DevNetDC results snapshot missing or incomplete.")
+        print(f"Journal directory:\n\t{root}")
+        print("\nRequired minimum directory structure:")
+        print(
+            "  <journal-root>/\n"
+            "  └── devnetDC-sld/\n"
+            "      └── stress_out/\n"
+            "          └── index.html"
+        )
+        print(
+            "\nCopy a validated, stable devnetDC-sld/ snapshot "
+            "from the original research environment into the journal directory."
+        )
+        print(
+            "Preserve the entire devnetDC-sld/ directory, including "
+            "its experiment results and supporting files."
+        )
+        print(
+            "\nThe publication workflow will not regenerate "
+            "or overwrite experimental results."
+        )
+        print(
+            "Re-run devnet_pub_figs.py after the snapshot is available.\n"
+        )
+        raise SystemExit(1)
+
+    print(f"ASR-DBG::Journal results snapshot verified:\n\t{report}")
+
+    # ------------------------------------------------------------------
+    # Require a journal-specific experiment/publication workbook.
+    # ------------------------------------------------------------------
+    if not target_xlsx.is_file():
+        print("\nASR-ERR: Journal publication experiment scenario workbook missing.")
+        print(f"Expected workbook:\n\t{target_xlsx}")
+        print(
+            "\nCopy a validated experiment scenario devnetDC_sysdsg.xlsx into:\n"
+            "  <journal-root>/devnet-stress-vectors/"
+        )
+        print(
+            "\nThe journal publication requires a validated experiment scenario "
+            "devnetDC-sld/."
+        )
+        print(
+            "The publication workflow does not automatically "
+            "generate or overwrite journal publication scenarios.\n"
+        )
+        raise SystemExit(1)
+
+    print(
+        f"ASR-DBG::Journal publication workbook verified:\n"
+        f"\t{target_xlsx}"
+    )
+
+    # ------------------------------------------------------------------
+    # Validate workbook worksheet.
+    # ------------------------------------------------------------------
+    wb = openpyxl.load_workbook(
+        target_xlsx,
+        read_only=True,
+        data_only=True,
+    )
+
+    try:
+        if EVENT_SHEET_NAME not in wb.sheetnames:
+            raise ValueError(
+                f"Journal workbook missing worksheet: {EVENT_SHEET_NAME}"
+            )
+    finally:
+        wb.close()
+
+    print("\nASR-DBG::Journal snapshot validation PASSED.")
+    print(f"Workbook:\n\t{target_xlsx}")
+    print(f"Results:\n\t{report}")
+
+    return target_xlsx
+
+# ------------------------------------------------------------------------------
+# select_publication_context()
+# Selects the normal DevNet workflow or a journal-specific snapshot.
+# ------------------------------------------------------------------------------
+def select_publication_context(args):
+    if not confirm("\nJournal publication target"):
+        return (
+            Path(args.xlsx).expanduser().resolve(),
+            Path(args.outdir).expanduser().resolve(),
+            None,
+            True,
+        )
+
+    journal_root = prompt_journal_root()
+    journal_xlsx = prepare_journal_snapshot(journal_root)
+
+    embed_numbers = confirm(
+        "\nEmbed Figure/Table numbers in journal PNGs? "
+        "[Y/N, default N]"
+    )
+
+    return (
+        journal_xlsx,
+        journal_root / JOURNAL_OUTDIR_REL,
+        journal_root,
+        embed_numbers,
+    )
 
 # ------------------------------------------------------------------------------
 # prepare_output_dir()
@@ -917,6 +1062,7 @@ def publication_table(
     result,
     outdir,
     artifact,
+    embed_numbers=True,
 ):
 
     scenario = artifact["scenario"]
@@ -1014,7 +1160,8 @@ def publication_table(
                 )
 
     ax.set_title(
-        f"Table {table_num}. {scenario}",
+        f"Table {table_num}. {scenario}"
+        if embed_numbers else scenario,
         fontsize=12,
         pad=12,
     )
@@ -1046,6 +1193,7 @@ def render_baseline_chronology(
     r,
     outdir,
     artifact,
+    embed_numbers=True,
 ):
 
     fig = plt.figure(
@@ -1100,7 +1248,10 @@ def render_baseline_chronology(
     )
 
     ax_obj.set_title(
-        f"Figure {artifact['number']}. {artifact['scenario']}",
+        (
+            f"Figure {artifact['number']}. {artifact['scenario']}"
+            if embed_numbers else artifact["scenario"]
+        ),
         fontsize=12,
     )
 
@@ -2167,13 +2318,54 @@ def select_publication_artifacts(
 # No publication Figure/Table numbers or Scenario identities are hard-coded.
 # ------------------------------------------------------------------------------
 def main():
-    args=parse_args()
+    args = parse_args()
+
     try:
-        xlsx=Path(args.xlsx).expanduser().resolve()
+        # --------------------------------------------------------------
+        # Report availability of the local DevNetDC research results.
+        # --------------------------------------------------------------
+        source_sld = SCRIPT_DIR / JOURNAL_SLD_REL
+        source_report = source_sld / "stress_out" / "index.html"
+
+        if not source_sld.is_dir():
+            print(
+                "\nASR-INFO: pypsa-zn/devnetDC-sld/ is not available."
+            )
+            print(
+                "This is expected in a fresh Git clone. "
+                "Journal publications require a separate validated "
+                "research snapshot.\n"
+            )
+        elif not source_report.is_file():
+            print(
+                "\nASR-WARN: Local DevNetDC results directory exists, "
+                "but stress_out/index.html is missing.\n"
+            )
+        else:
+            print(
+                "\nASR-DBG::Local DevNetDC results available:\n"
+                f"\t{source_report}\n"
+            )
+
+        # --------------------------------------------------------------
+        # Select the normal DevNet or journal publication workflow.
+        # --------------------------------------------------------------
+        xlsx, outdir, journal_root, embed_numbers = select_publication_context(args)
+        print(
+            "ASR-DBG::Embedded Figure/Table numbering: "
+            + ("Enabled" if embed_numbers else "Disabled")
+        )
         print(f"ASR-DBG::Workbook being read:\n\t{xlsx}")
-        outdir = Path(
-            args.outdir
-        ).expanduser().resolve()
+        print(f"ASR-DBG::Publication output directory:\n\t{outdir}")
+
+        if journal_root is not None:
+            print(f"ASR-DBG::Journal publication root:\n\t{journal_root}")
+
+        if journal_root is not None and args.html is not None:
+            raise ValueError(
+                "--html cannot be used in journal mode. "
+                "Journal results must come from the frozen snapshot."
+            )
 
         if not xlsx.is_file():
             raise FileNotFoundError(
@@ -2312,6 +2504,7 @@ def main():
                     ],
                     outdir,
                     artifact,
+                    embed_numbers=embed_numbers,
                 )
 
             elif artifact[
@@ -2341,6 +2534,7 @@ def main():
                         ],
                         outdir,
                         artifact,
+                        embed_numbers=embed_numbers,
                     )
 
                 else:
@@ -2354,8 +2548,8 @@ def main():
                         event_keys=event_keys,
                         outdir=outdir,
                         title=(
-                            f"Figure {artifact['number']}. "
-                            f"{artifact['scenario']}"
+                            f"Figure {artifact['number']}. {artifact['scenario']}"
+                            if embed_numbers else artifact["scenario"]
                         ),
                         filename=artifact_filename(
                             artifact
@@ -2371,8 +2565,13 @@ def main():
         print(f"ERROR: {exc}")
         sys.exit(1)
 
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\nUser interrupted. Exiting publication workflow.\n")
+        raise SystemExit(130)
 
 # ------------------------------------------------------------------------------
 # END OF devnet_pub_figs.py

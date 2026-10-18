@@ -60,6 +60,12 @@ larger-network studies.
   - [Diagnostic Plots](#diagnostic-plots)
   - [Publication Figure Workflow](#publication-figure-workflow)
     - [Experiment Design Workbook](#experiment-design-workbook)
+    - [Journal Publication — Frozen Research Snapshot](#journal-publication--frozen-research-snapshot)
+      - [Journal Directory Structure](#journal-directory-structure)
+      - [Running Journal Publication](#running-journal-publication)
+      - [Path Resolution](#path-resolution)
+      - [Figure and Table Numbering](#figure-and-table-numbering)
+      - [Research Reproducibility](#research-reproducibility)
   - [ERCOT Texas7k PSO Full-Cycle Case](#ercot-texas7k-pso-full-cycle-case)
     - [PyPSA Route](#pypsa-route)
     - [PSO/AIMMS Environment Dependencies](#psoaimms-environment-dependencies)
@@ -310,11 +316,10 @@ loading.
 
 ### `pub_figs/`
 
-`devnet_pub_figs.py` generates publication artifacts into:
+`devnet_pub_figs.py` generates publication artifacts into the active publication root:
 
-``` text
-./pub_figs/
-```
+- Standard DevNet workflow: `pypsa-zn/pub_figs/`
+- Journal workflow: `<journal-root>/pub_figs/`
 
 The directory is created only after user confirmation.
 
@@ -545,6 +550,162 @@ Event Driver convention:
 -   Datacenter mitigation/support actions → **blue**.
 
 Generated publication artifacts are written to `./pub_figs/`.
+
+### Journal Publication — Frozen Research Snapshot
+
+`devnet_pub_figs.py` supports two publication workflows:
+
+- **DevNet workflow:** Uses the active `pypsa-zn` experiment workbook and committed stress results.
+- **Journal workflow:** Uses a separately maintained, frozen research snapshot under a user-specified journal publication directory.
+
+The journal workflow preserves the experimental data, Commit IDs, numerical results, and publication definitions independently of ongoing `pypsa-zn` development.
+
+#### Journal Directory Structure
+
+The researcher must maintain:
+
+```text
+<journal-root>/
+├── devnet-stress-vectors/
+│   └── devnetDC_sysdsg.xlsx
+├── devnetDC-sld/
+│   ├── *.csv
+│   ├── plots/
+│   ├── logs/
+│   └── stress_out/
+│       ├── index.html
+│       └── committed experiment results
+└── pub_figs/
+    ├── fig*.png
+    └── table*.png
+```
+
+The complete `devnetDC-sld/` directory should be preserved from the validated research environment. The minimum result file required by the current publication renderer is `devnetDC-sld/stress_out/index.html`.
+
+The journal-specific `devnetDC_sysdsg.xlsx` must correspond to the frozen experimental results.
+
+**Important:** Neither the journal workbook nor the DevNetDC results snapshot is automatically regenerated, cloned, or overwritten.
+
+#### Running Journal Publication
+
+From the `pypsa-zn` repository root:
+
+```powershell
+python devnet_pub_figs.py
+```
+
+The script prompts:
+
+```text
+Journal publication target? (Y/N)
+        ↓
+YES                         NO
+ ↓                           ↓
+Enter journal directory     Standard DevNet workflow
+ ↓
+Validate journal snapshot
+ ↓
+Validate devnetDC_sysdsg.xlsx
+ ↓
+Select embedded numbering preference
+ ↓
+Select publication Figures / Tables
+ ↓
+Generate PNGs in <journal-root>/pub_figs/
+```
+
+For journal publication, the researcher supplies the journal directory path. No journal directory is hard-coded in the renderer.
+
+If the journal results snapshot or workbook is missing, the script reports the required path and exits without generating publication artifacts.
+
+When launched through `devnet_menu.py`, control returns to the menu after the script exits.
+
+#### Path Resolution
+
+The workbook is expected at:
+
+```text
+<journal-root>/devnet-stress-vectors/devnetDC_sysdsg.xlsx
+```
+
+The publication root is derived from the workbook location:
+
+```python
+project_root = workbook_path.parent.parent
+```
+
+Workbook result paths beginning with `~/` or `~\` resolve relative to this root.
+
+Example:
+
+```text
+~\devnetDC-sld\stress_out\:index.html
+```
+
+resolves to:
+
+```text
+<journal-root>/devnetDC-sld/stress_out/index.html
+```
+
+The `--html` override is disabled in journal mode to prevent publication artifacts from accidentally using transient experimental results outside the frozen snapshot.
+
+The standard DevNet workflow continues to resolve paths relative to the `pypsa-zn` repository.
+
+#### Figure and Table Numbering
+
+Publication artifact metadata is defined in the `devnetDC_dsg` worksheet of `devnetDC_sysdsg.xlsx`.
+
+| XLSX column | Publication metadata |
+|---|---|
+| C | Event grouping |
+| D | Artifact type: `Fig` or `Table` |
+| E | Figure/Table number |
+| F | Output filename suffix |
+
+The renderer generates filenames using:
+
+```text
+fig<Number>_<Suffix>.png
+table<Number>_<Suffix>.png
+```
+
+For example:
+
+```text
+fig3_Equilibrium_State.png
+table3_Equilibrium_State.png
+```
+
+The filename suffix is normalized by replacing non-alphanumeric characters, except underscores, with underscores.
+
+**Journal publication numbering option:**
+
+```text
+Embed Figure/Table numbers in journal PNGs? [Y/N, default N]
+```
+
+- **Y:** Include `Figure N.` or `Table N.` in the embedded graphical title.
+- **N:** Retain the descriptive Scenario title without the Figure/Table number.
+- **Standard DevNet workflow:** Embedded numbering remains enabled.
+
+The XLSX artifact number and generated PNG filename remain unchanged regardless of the embedded numbering preference.
+
+For IEEE journal submissions, selecting **N** avoids duplicate numbering when Pandoc/XeLaTeX generates Figure/Table captions in the manuscript.
+
+#### Research Reproducibility
+
+Journal publication regeneration must preserve:
+
+- Original experiment configuration and numerical results.
+- Scenario and Event definitions.
+- Commit IDs and corresponding committed OPF results.
+- Scenario-specific `stress_out/index.html` references.
+- Frozen `devnetDC-sld/` experimental artifacts.
+
+Publication Figure/Table numbering and graphical presentation may be updated independently without rerunning or modifying the underlying experiments.
+
+The publication renderer remains maintained in `pypsa-zn`; each journal project retains its own validated research inputs and generated publication artifacts.
 
 ------------------------------------------------------------------------
 
