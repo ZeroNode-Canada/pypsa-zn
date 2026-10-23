@@ -66,6 +66,9 @@
 
 from __future__ import annotations
 
+# ------------------------------------------------------------------------------
+# Standard imports
+# ------------------------------------------------------------------------------
 import argparse
 import csv
 import json
@@ -78,11 +81,20 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
 
+# ------------------------------------------------------------------------------
+# Third-party imports
+# ------------------------------------------------------------------------------
 import numpy as np
 import pandas as pd
 
+# ------------------------------------------------------------------------------
+# Project imports
+# ------------------------------------------------------------------------------
 import ercot7k_case as ec
 
+# ------------------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------------------
 # Global defines
 SECTION_SEPARATOR = "="*80 + "\n"  # for print separation
 SUBSECTION_SEPARATOR = "-"*40 + "\n"  # for print separation
@@ -1816,7 +1828,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print("wrote %-22s %s" % (kind, written[kind]))
     return 0
 
-
+# ------------------------------------------------------------------------------
+# Main execution
+# ------------------------------------------------------------------------------
 if __name__ == "__main__":
     raise SystemExit(main())
 

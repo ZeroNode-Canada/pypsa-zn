@@ -38,6 +38,21 @@ controlled experimentation, regression testing, and publication-quality
 analysis while remaining structurally compatible with future
 larger-network studies.
 
+The framework also provides an independent **Polaris PSO/AIMMS integration**
+for studying datacenter load, BYOG, and transmission constraints on the
+ERCOT Texas7k synthetic transmission network.
+
+The two modeling routes are complementary:
+
+- **PyPSA DevNet:** Controlled six-bus experiments, stress testing,
+  feasibility analysis, and publication workflows.
+- **Polaris PSO ERCOT7k:** Larger-network optimization, nodal screening,
+  geographic visualization, and datacenter/BYOG scenario development.
+
+For the ERCOT7k architecture, experimental design, configuration,
+and researcher workflows, see
+[PyPSA-ZN-ERCOT7K — Modeling and Design Guide](./PyPSA-ZN-ERCOT7K.md).
+
 ------------------------------------------------------------------------
 
 # Table of Contents
@@ -66,22 +81,19 @@ larger-network studies.
       - [Path Resolution](#path-resolution)
       - [Figure and Table Numbering](#figure-and-table-numbering)
       - [Research Reproducibility](#research-reproducibility)
-  - [ERCOT Texas7k PSO Full-Cycle Case](#ercot-texas7k-pso-full-cycle-case)
-    - [PyPSA Route](#pypsa-route)
-    - [PSO/AIMMS Environment Dependencies](#psoaimms-environment-dependencies)
-      - [Create the PSO Virtual Environment](#create-the-pso-virtual-environment)
-      - [Install aimmspy](#install-aimmspy)
-      - [Verify aimmspy Installation](#verify-aimmspy-installation)
-      - [Configure pso.local.toml](#configure-psolocaltoml)
-      - [Optional Interpreter Override — PowerShell](#optional-interpreter-override--powershell)
-      - [Verify PSO Execution](#verify-pso-execution)
-      - [Run Through DevNet Menu](#run-through-devnet-menu)
-    - [PSO Route](#pso-route)
-      - [AIMMS and PSO License Requirement](#aimms-and-pso-license-requirement)
-      - [PSO Configuration](#pso-configuration)
-      - [Windows 11 Paths and Python Environments](#windows-11-paths-and-python-environments)
-      - [Run the ERCOT Texas7k Case](#run-the-ercot-texas7k-case)
-      - [PSO/AIMMS Troubleshooting](#psoaimms-troubleshooting)
+  - [ERCOT Texas7k — PSO Modeling and Design of Experiments](#ercot-texas7k--pso-modeling-and-design-of-experiments)
+    - [Research Workflow](#research-workflow)
+    - [ERCOT7k PSO Menu](#ercot7k-pso-menu)
+    - [Key Research Artifacts](#key-research-artifacts)
+    - [PSO/AIMMS Prerequisites](#psoaimms-prerequisites)
+    - [License Boundary](#license-boundary)
+  - [Environment/Codebase Sanity Tests](#environmentcodebase-sanity-tests)
+    - [Git Working Tree Integrity](#git-working-tree-integrity)
+    - [PSO Configuration Precedence](#pso-configuration-precedence)
+    - [ERCOT7k Baseline Case Integrity](#ercot7k-baseline-case-integrity)
+    - [ERCOT7k Derived-Case Builder](#ercot7k-derived-case-builder)
+    - [Validation Scope](#validation-scope)
+  - [PSO/AIMMS Troubleshooting](#psoaimms-troubleshooting)
   - [Reference Snapshots for Developers](#reference-snapshots-for-developers)
   - [Demonstration Framework](#demonstration-framework)
     - [Building a Custom Presentation Wrapper](#building-a-custom-presentation-wrapper)
@@ -151,6 +163,7 @@ devnet_stress.py
 pypsa-zn/
 │
 ├── README.md
+├── PyPSA-ZN-ERCOT7K.md
 ├── LICENSE
 ├── NOTICE
 ├── CONTRIBUTING.md
@@ -174,6 +187,7 @@ pypsa-zn/
 ├── devnet_callstack.md
 │
 ├── ercot7k_pso.py
+├── ercot7k_node_screen.py
 ├── pso_preflight.py
 ├── ercot7k_build.py
 ├── ercot7k_case.py
@@ -182,6 +196,11 @@ pypsa-zn/
 ├── pso_config.py
 ├── pso.local.toml.example
 ├── ercot7k/
+├── ercot7k_geo/
+│   └── texas7k_bus_coords.csv
+│
+├── geo-plots/
+│   └── ercot7k_node_map.py
 │
 ├── lib/
 │   ├── devnet_stress_lib.py
@@ -224,6 +243,17 @@ pypsa-zn/
 Generated runtime directories such as `devnet-sld/`, `devnetDC-sld/`,
 `pub_figs/`, logs, caches, and temporary outputs may also appear
 locally.
+
+The ERCOT7k workflow also generates local runtime directories:
+
+- `ercot7k_config/` — researcher-editable datacenter, stress, and
+  node-screening configurations.
+- `ercot7k-derived/` — derived PSO input cases and manifests.
+- `ercot7k-runs/` — baseline/derived optimization results and ranked nodes.
+- `geo-plots/ercot7k_node_map.html` — standalone geographic visualization.
+
+See [ERCOT7k Code and Data Directory Map](./PyPSA-ZN-ERCOT7K.md#code-and-data-directory-map)
+for directory ownership and lifecycle.
 
 ------------------------------------------------------------------------
 
@@ -709,164 +739,44 @@ The publication renderer remains maintained in `pypsa-zn`; each journal project 
 
 ------------------------------------------------------------------------
 
-## ERCOT Texas7k PSO Full-Cycle Case
+## ERCOT Texas7k — PSO Modeling and Design of Experiments
 
-Menu Option `3) Datacenter case` provides two independent engine routes:
+The ERCOT Texas7k integration extends `pypsa-zn` with a separate
+Polaris PSO/AIMMS optimization route for larger-network datacenter
+and BYOG studies.
 
-```text
-3) Datacenter case — choose the engine route
+Unlike the six-bus PyPSA DevNet, ERCOT7k uses the separately
+licensed Polaris PSO engine with AIMMS/CPLEX.
 
-   PyPSA route
-      ↓
-   devnetDC_sld.py
-      ↓
-   6-bus DevNet + Datacenter BYOG
-
-   PSO route
-      ↓
-   ercot7k_pso.py
-      ↓
-   ERCOT Texas7k public case (6717 buses)
-```
-
-### PyPSA Route
-
-The PyPSA route builds the six-bus DevNet SLD with Datacenter BYOG from
-the CSV configuration.
+### Research Workflow
 
 ```text
-devnetDC_sld.py
-      ↓
-devnet_config/devnet_dc.csv
-      ↓
-Datacenter bus
-Datacenter load
-BYOG capacity
-BYOG marginal cost
-      ↓
-PyPSA DevNetDC network
+ERCOT7k Baseline PSO Optimization
+               ↓
+       Node Screening / Ranking
+               ↓
+       Geographic Visualization
+               ↓
+       Candidate Node Selection
+               ↓
+       Datacenter / BYOG Configuration
+               ↓
+       Derived-Case Construction
+               ↓
+       Derived-Case PSO Optimization
+               ↓
+       Baseline / Derived Analysis
 ```
 
-This is the DevNet research workflow used by `devnet_stress.py`,
-the diagnostic plotting tools, and `devnet_pub_figs.py`.
+The baseline network under `ercot7k/` remains immutable.
 
-### PSO/AIMMS Environment Dependencies
+Researchers configure screening criteria and datacenter/BYOG
+experiments through CSV files rather than modifying the
+baseline network directly.
 
-The PSO ERCOT Texas7k workflow requires:
+### ERCOT7k PSO Menu
 
-- A separately installed and licensed AIMMS environment (26.1.x tested).
-- The Polaris PSO model project (`PSO.aimms`), obtained separately from Polaris.
-- The `aimmspy` Python package.
-- A dedicated Python virtual environment (`.venv-pso`).
-
-**Important:** `aimmspy` must remain separate from the PyPSA environment because of incompatible optimization dependencies. Do not install `aimmspy` into the existing PyPSA environment.
-
-#### Create the PSO Virtual Environment
-
-Open PowerShell in the `pypsa-zn` repository root:
-
-```powershell
-cd "C:\path\to\your\pypsa-zn"
-python -m venv .venv-pso
-```
-
-This creates:
-
-```text
-pypsa-zn/
-├── .venv/           # Optional PyPSA environment
-└── .venv-pso/       # PSO/AIMMS Python environment
-```
-
-The `.venv-pso` directory is local to the repository and should not be committed to Git.
-
-#### Install aimmspy
-
-From the repository root:
-
-```powershell
-.\.venv-pso\Scripts\python.exe -m pip install --upgrade pip
-.\.venv-pso\Scripts\python.exe -m pip install aimmspy
-```
-
-#### Verify aimmspy Installation
-
-```powershell
-.\.venv-pso\Scripts\python.exe -c "import aimmspy; print('aimmspy OK:', aimmspy.__version__)"
-```
-
-Example validated output:
-
-```text
-aimmspy OK: 26.1.8.3
-```
-
-This confirms that `aimmspy` is installed in the dedicated PSO environment.
-
-#### Configure pso.local.toml
-
-Copy the supplied configuration template:
-
-```powershell
-Copy-Item pso.local.toml.example pso.local.toml
-```
-
-If `pso.local.toml` already exists, retain and edit it rather than overwriting it.
-
-Configure at least the following entries:
-
-```toml
-project = "C:/path/to/PSO/PSO.aimms"
-python = "C:/path/to/pypsa-zn/.venv-pso/Scripts/python.exe"
-```
-
-**Windows path convention:** Use forward slashes (`/`) in the TOML path strings.
-
-The `python` path must point to the `.venv-pso` environment created above, under the actual repository directory.
-
-For example, if the repository is located at:
-
-```text
-C:\Development\pypsa-zn
-```
-
-then configure:
-
-```toml
-python = "C:/Development/pypsa-zn/.venv-pso/Scripts/python.exe"
-```
-
-The `project` entry must point to the separately installed Polaris PSO AIMMS project.
-
-Leave `license_url` commented out when using an existing machine-configured AIMMS license.
-
-#### Optional Interpreter Override — PowerShell
-
-The PSO runner reads the configured `python` entry from `pso.local.toml` through `pso_config.py`.
-
-Therefore, the following environment-variable override is **not required** when `pso.local.toml` is correctly configured:
-
-```powershell
-$env:DEVNET_PSO_PYTHON = (Resolve-Path ".\.venv-pso\Scripts\python.exe").Path
-```
-
-This PowerShell command is useful only for troubleshooting or temporarily overriding the configured PSO interpreter.
-
-An explicitly set `DEVNET_PSO_PYTHON` environment variable takes precedence over the corresponding `pso.local.toml` entry.
-
-#### Verify PSO Execution
-
-From the repository root:
-
-```powershell
-python ercot7k_pso.py
-```
-
-This directly tests the PSO runner, bypassing `devnet_menu.py`.
-
-A successful run should invoke AIMMS/CPLEX and generate the ERCOT Texas7k optimization results.
-
-#### Run Through DevNet Menu
+Launch:
 
 ```powershell
 python devnet_menu.py
@@ -875,127 +785,199 @@ python devnet_menu.py
 Select:
 
 ```text
-3) Datacenter case -- choose the engine route
-   → PSO route
-   → Run the base case, full cycle
-```
-
-The menu invokes `ercot7k_pso.py`, which uses the configured `.venv-pso` interpreter for PSO execution.
-
-**Validated configuration:** Windows 11, Python 3.13, `aimmspy 26.1.8.3`, AIMMS 26.1.x, with 221/221 optimal solves in the ERCOT Texas7k full-cycle case.
-
-### PSO Route
-
-The PSO route runs the public **ERCOT Texas7k** case (6717 buses) through
-Power System Optimizer (PSO), driven from Python through `aimmspy`.
-
-```text
-ercot7k/
-pso_config.py
-pso.local.toml
-      ↓
-ercot7k_pso.py
-      ↓
-aimmspy
-      ↓
-AIMMS + PSO
-      ↓
-ERCOT Texas7k solve
-```
-
-The PSO route is a separate engine path. It:
-
-* Does **not** build a PyPSA network.
-* Does **not** modify the six-bus DevNet/DevNetDC network.
-* Does **not** replace `devnetDC_sld.py`.
-* Uses the user's separately installed and licensed AIMMS/PSO environment.
-* Uses the public ERCOT Texas7k case supplied under `ercot7k/`.
-
-The PSO route is therefore an extension of the DevNet Engine workflow rather
-than a replacement for the PyPSA modeling engine. 
-
-#### AIMMS and PSO License Requirement
-
-PSO is separately licensed software and is **not distributed as part of the
-Apache-2.0 licensed `pypsa-zn` source code**.
-
-The PSO route requires:
-
-* AIMMS Developer.
-* A valid AIMMS license.
-* The separately supplied PSO model/project (`PSO.aimms`).
-* A PSO license supplied/configured by Polaris.
-* `aimmspy` in the PSO/AIMMS Python environment.
-
-Academic researchers may obtain an AIMMS Academic license. The PSO installation
-documentation states that academic users obtain the AIMMS license separately and
-then work with Polaris to obtain the corresponding PSO license. 
-
-**NOTE:** 
-**The proprietary PSO software, PSO license, and Polaris installation guide are not distributed through this repository.**
-
-Contact the **Polaris Systems Optimization (PSO) development team** for the
-current PSO Installation Guide, PSO software/license, and installation support.
-
-
-#### PSO Configuration
-
-Create your machine-specific configuration from the supplied template:
-
-```powershell
-Copy-Item .\pso.local.toml.example .\pso.local.toml
-```
-
-If `pso.local.toml` already exists, edit it rather than overwriting it.
-
-Configure the local PSO/AIMMS project path and dedicated `.venv-pso` Python interpreter as documented in [PSO/AIMMS Environment Dependencies](#psoaimms-environment-dependencies).
-
-If required by the installed academic/cloud license, configure:
-
-```toml
-license_url = "wss://..."
-```
-
-The `pso.local.toml` file is machine-specific and must not be committed to Git.
-
-#### Windows 11 Paths and Python Environments
-
-Use forward slashes (`/`) in `pso.local.toml` for the validated Windows 11 configuration.
-
-The PSO route uses a dedicated `.venv-pso` environment containing `aimmspy`, separate from the PyPSA environment.
-
-When invoked through `devnet_menu.py`, `ercot7k_pso.py` automatically re-launches under the configured PSO interpreter when required.
-
-See [PSO/AIMMS Environment Dependencies](#psoaimms-environment-dependencies) for setup and verification.
-
-
-#### Run the ERCOT Texas7k Case
-
-Run directly:
-
-```powershell
-python ercot7k_pso.py
-```
-
-Or through the menu:
-
-```text
-python devnet_menu.py
-     ↓
 3) Datacenter case
-     ↓
-PSO: ERCOT Texas7k public case
-     ↓
-PSO/AIMMS environment preflight
-     ↓
-Run the base case, full cycle
+   → 2) PSO: ERCOT Texas7k
 ```
 
-The menu invokes `pso_preflight.py` to validate the configured interpreter, `aimmspy` availability, and PSO project path before launching the runner.
+The PSO submenu provides:
 
-The runner prompts for a run name, displays a pre-flight configuration summary, requests confirmation, executes the PSO cycle stack, writes logs/results, and verifies served load.
+```text
+1) Run Baseline (ercot7k_pso.py)
+2) Screen / Rank ERCOT7k Nodes (ercot7k_node_screen.py)
+3) Plot Ranked ERCOT7k Nodes (geo-plots/ercot7k_node_map.py)
+4) Configure Derived Case (ercot7k_build.py)
+5) Build Derived Case (ercot7k_build.py / ercot7k_case.py)
+6) Run Derived Case (ercot7k_pso.py)
+7) Compare Baseline vs Derived Case [PENDING]
+0) Back to main menu
+```
 
-#### PSO/AIMMS Troubleshooting
+### Key Research Artifacts
+
+| Artifact | Purpose |
+|---|---|
+| `ercot7k/` | Immutable baseline PSO network inputs |
+| `ercot7k_config/ercot7k_node_filters.csv` | Researcher-controlled node screening |
+| `ercot7k-runs/<run>/ercot7k_node_ranked.csv` | Ranked candidate nodes |
+| `ercot7k_geo/texas7k_bus_coords.csv` | Geographic node reference |
+| `geo-plots/ercot7k_node_map.html` | Interactive geographic visualization |
+| `ercot7k_config/ercot7k_dc.csv` | Datacenter load and BYOG configuration |
+| `ercot7k_config/ercot7k_stress.csv` | Grid-stress configuration |
+| `ercot7k-derived/` | Generated datacenter/stress case layers |
+| `ercot7k-runs/` | PSO optimization results |
+
+Node screening currently supports `max_spread`, `mean_spread`,
+and `stress_hours` ranking metrics.
+
+These are LMP-separation screening indicators, not independent
+proof of transmission congestion or datacenter deliverability.
+
+### PSO/AIMMS Prerequisites
+
+The ERCOT7k optimization route requires:
+
+- A separately installed and licensed AIMMS environment.
+- Polaris PSO and its corresponding license.
+- The `aimmspy` Python package.
+- A dedicated `.venv-pso` Python environment.
+- A machine-specific `pso.local.toml` configuration.
+
+The PSO environment must remain separate from the PyPSA environment.
+
+Run the environment preflight before optimization:
+
+```powershell
+python pso_preflight.py
+```
+
+For installation, Windows 11 path conventions, configuration
+precedence, baseline execution, screening calculations,
+geospatial architecture, derived-case construction, and
+experimental reproducibility, refer to:
+
+**[PyPSA-ZN-ERCOT7K — Modeling and Design Guide](./PyPSA-ZN-ERCOT7K.md)**
+
+### License Boundary
+
+Polaris PSO, AIMMS, CPLEX, their licenses, and proprietary
+documentation are not distributed through this repository.
+
+The Apache-2.0 license applies only to the appropriately
+licensed ZeroNode source code and documentation.
+
+------------------------------------------------------------------------
+
+## Environment/Codebase Sanity Tests
+
+These tests validate a fresh `pypsa-zn` clone, PSO configuration precedence, ERCOT7k baseline integrity, and derived-case builder availability **without launching AIMMS/CPLEX**.
+
+Run from the `pypsa-zn` repository root using PowerShell.
+
+### Git Working Tree Integrity
+
+```powershell
+git status -sb
+git diff --check
+```
+
+`git diff --check` checks uncommitted changes for whitespace errors. It does not validate Python syntax or program behavior.
+
+**Expected:** No whitespace errors.
+
+### PSO Configuration Precedence
+
+Verify that `DEVNET_PSO_CASE` overrides the `case` setting in `pso.local.toml`.
+
+```powershell
+$env:DEVNET_PSO_CASE = "ercot7k/texas7k.csv"
+
+python -c "import os, pso_config; pso_config.load_config(); print('Selected case:', os.environ.get('DEVNET_PSO_CASE'))"
+
+Remove-Item Env:\DEVNET_PSO_CASE -ErrorAction SilentlyContinue
+```
+
+**Expected:**
+
+```text
+Selected case: ercot7k/texas7k.csv
+```
+
+The environment override is temporary and does not modify `pso.local.toml`.
+
+### ERCOT7k Baseline Case Integrity
+
+```powershell
+python ercot7k_case.py verify ercot7k
+```
+
+**Expected:** The verification report completes with zero warnings and zero errors.
+
+Validated baseline example:
+
+```text
+OK=6  SKIP=13  WARNING=0  ERROR=0
+```
+
+`SKIP` results are expected for checks that apply only to derived-case layers, manifests, or datacenter/BYOG injectors.
+
+The exact counts may vary with the ERCOT7k case version.
+
+### ERCOT7k Derived-Case Builder
+
+Verify that the builder CLI is available:
+
+```powershell
+python ercot7k_build.py --help
+```
+
+**Expected:** Usage information includes:
+
+```text
+--init
+--show-config
+--help
+```
+
+Review existing configuration inputs:
+
+```powershell
+python ercot7k_build.py --show-config
+```
+
+**Expected:**
+
+- If `ercot7k_config/` exists, the builder displays the active datacenter and stress configuration rows.
+- On a fresh clone, the builder may report `AMW-ERR: config folder not found`. This is expected before initialization and does not indicate a code regression.
+
+Initialize the configuration templates:
+
+```powershell
+python ercot7k_build.py --init
+```
+
+Review and edit the generated CSVs before building a derived case.
+
+**Note:** The builder initializes its logging infrastructure even when invoked with `--help`. This does not create a derived-case layer.
+
+### Validation Scope
+
+These sanity tests confirm:
+
+- Git working-tree whitespace integrity.
+- PSO configuration environment-variable precedence.
+- ERCOT7k baseline input consistency.
+- Derived-case builder CLI availability.
+- Configuration template accessibility.
+
+They do **not** execute PSO optimization or validate numerical results.
+
+Additional ERCOT7k regression validation includes:
+
+- `pso_preflight.py` — PSO interpreter, project and dependency checks.
+- `ercot7k_node_screen.py` — nodal ranking and geographic mapping.
+- `geo-plots/ercot7k_node_map.py` — standalone HTML generation.
+- `ercot7k_case.py` — derived-case referential integrity.
+- `devnet_menu.py` — end-to-end workflow dispatch.
+
+The detailed validation methodology and expected artifacts are
+documented in
+[ERCOT7k Sanity and Regression Tests](./PyPSA-ZN-ERCOT7K.md#sanity-and-regression-tests).
+
+For AIMMS interpreter, `aimmspy`, licensing, and PSO project setup, see [ERCOT7k Modeling and Design Guide](./PyPSA-ZN-ERCOT7K.md).
+
+------------------------------------------------------------------------
+
+## PSO/AIMMS Troubleshooting
 
 Check `pso.local.toml` first when the PSO route cannot locate:
 
@@ -1029,6 +1011,12 @@ ASR-ERR:
 Use the displayed error, `aimms.err`, and the PSO debug log to identify the
 underlying configuration or solve problem. `ercot7k_pso.py` surfaces these logs
 when the run fails. 
+
+For complete PSO environment setup and execution guidance, see
+[PyPSA-ZN-ERCOT7K.md](./PyPSA-ZN-ERCOT7K.md).
+
+For node-screening, geographic visualization, and derived-case
+workflow issues, use the corresponding sections of the design guide.
 
 For PSO installation, licensing, or AIMMS/CPLEX configuration issues, contact the Polaris development team.
 
@@ -1175,20 +1163,21 @@ Primary Python dependencies include PyPSA, pandas, numpy, matplotlib, openpyxl, 
 
 The PyPSA DevNet workflow uses the active Python interpreter. The PSO ERCOT Texas7k workflow requires a separate `.venv-pso` environment containing `aimmspy`, configured through `pso.local.toml`.
 
-See [PSO/AIMMS Environment Dependencies](#psoaimms-environment-dependencies) for installation and configuration.
+See [ERCOT7k Modeling and Design Guide](./PyPSA-ZN-ERCOT7K.md) for installation and configuration.
 
 ### Tested Python Environment
 
-The current DevNet workflow has been validated using the installed Microsoft Store Python 3.13 environment:
+The PyPSA DevNet workflow has been validated on Windows 11
+using Python 3.13.
 
-```text
-Python 3.13
+The active Python interpreter can be identified using:
 
-C:\Users\ashok\AppData\Local\Microsoft\WindowsApps\
-PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\python.exe
+```powershell
+python -c "import sys; print(sys.executable)"
 ```
 
-A project-local Python virtual environment is **not required** to run the currently validated DevNet workflow.
+A project-local virtual environment is optional for PyPSA DevNet.
+The PSO route requires its own dedicated .venv-pso environment.
 
 ### Optional Clean-Slate Virtual Environment
 
@@ -1271,6 +1260,12 @@ Before publishing or pushing a release:
     `.gitignore`.
 -   Confirm intentional reference snapshots are clearly identified.
 -   Confirm README workflow matches `devnet_menu.py`.
+-   Confirm `PyPSA-ZN-ERCOT7K.md` matches the implemented PSO submenu.
+-   Verify ERCOT7k node screening and geographic plot generation.
+-   Confirm the baseline input directory remains unchanged.
+-   Confirm machine-specific `pso.local.toml` and PSO licenses are excluded.
+-   Confirm generated ERCOT7k runs, derived cases, and HTML artifacts
+    follow the intended Git tracking policy.
 -   Run the complete validated workflow:
 
 ``` text

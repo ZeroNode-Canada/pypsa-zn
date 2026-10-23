@@ -60,6 +60,9 @@
 
 from __future__ import annotations
 
+# ------------------------------------------------------------------------------
+# Standard imports
+# ------------------------------------------------------------------------------
 import argparse
 import csv
 import hashlib
@@ -72,6 +75,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
+# ------------------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------------------
 # Global defines
 SECTION_SEPARATOR = "="*80 + "\n"  # for print separation
 SUBSECTION_SEPARATOR = "-"*40 + "\n"  # for print separation
@@ -3558,6 +3564,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     print("wrote layer %s to %s" % (manifest["layer_id"], args.out))
     return 0
 
-
 if __name__ == "__main__":
     sys.exit(main())
+
+# ------------------------------------------------------------------------------
+# END OF ercot7k_case.py
+# ------------------------------------------------------------------------------

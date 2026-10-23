@@ -57,6 +57,7 @@ import pso_config
 # ------------------------------------------------------------------------------
 # Configuration
 # ------------------------------------------------------------------------------
+# Global defines
 SECTION_SEPARATOR = "-" * 45
 README_SECTION = "PSO/AIMMS Environment Dependencies"
 
@@ -96,10 +97,97 @@ def main() -> int:
     print("OK: PSO.aimms project found.")
 
     if not python or not Path(python).is_file():
-        print(f"FAIL: Invalid PSO Python path: {python or '(unset)'}")
-        return 1
+        print("\nAMW-ERR: Configured PSO Python interpreter not found.")
+        print(f"Configured path:\n\t{python or '(unset)'}")
 
-    print(f"OK: PSO Python interpreter: {python}")
+        # --------------------------------------------------------------
+        # Check for a local PSO virtual environment.
+        # --------------------------------------------------------------
+        repo_root = Path(__file__).resolve().parent
+        local_python = repo_root / ".venv-pso" / "Scripts" / "python.exe"
+
+        if not local_python.is_file():
+            print("\nAMW-ERR: Local .venv-pso environment not found.")
+            print(f"Expected interpreter:\n\t{local_python}")
+
+            print("\nCorrective actions (PowerShell):")
+            print("From the pypsa-zn repository root, run:")
+            print("  python -m venv .venv-pso")
+
+            print("\nInstall aimmspy:")
+            print(r"  .\.venv-pso\Scripts\python.exe -m pip install --upgrade pip")
+            print(r"  .\.venv-pso\Scripts\python.exe -m pip install aimmspy")
+
+            print("\nVerify installation:")
+            print(
+                r'  .\.venv-pso\Scripts\python.exe -c '
+                '"import aimmspy; print(\'aimmspy OK:\', aimmspy.__version__)"'
+            )
+
+            print("\nThen update pso.local.toml and rerun:")
+            print("  python pso_preflight.py")
+            return 1
+
+        print("\nAMW-INFO: Local .venv-pso Python interpreter found.")
+        print(f"Interpreter:\n\t{local_python}")
+
+        # --------------------------------------------------------------
+        # Verify aimmspy in the discovered local environment.
+        # --------------------------------------------------------------
+        probe = (
+            "import aimmspy; "
+            "print('aimmspy OK:', aimmspy.__version__)"
+        )
+
+        try:
+            result = subprocess.run(
+                [str(local_python), "-c", probe],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            print(f"\nAMW-ERR: Cannot execute local PSO Python: {exc}")
+            return 1
+
+        if result.returncode != 0:
+            print("\nAMW-ERR: aimmspy is not available in .venv-pso.")
+            print((result.stderr or result.stdout).strip())
+
+            print("\nCorrective actions (PowerShell):")
+            print(r"  .\.venv-pso\Scripts\python.exe -m pip install aimmspy")
+
+            print("\nVerify installation:")
+            print(
+                r'  .\.venv-pso\Scripts\python.exe -c '
+                '"import aimmspy; print(\'aimmspy OK:\', aimmspy.__version__)"'
+            )
+
+            print("\nThen rerun:")
+            print("  python pso_preflight.py")
+            return 1
+
+        # --------------------------------------------------------------
+        # Local environment is valid; only the configured path is wrong.
+        # --------------------------------------------------------------
+        print(f"\nAMW-INFO: {result.stdout.strip()}")
+        print("AMW-INFO: Local PSO Python environment is valid.")
+
+        valid_path = local_python.resolve().as_posix()
+
+        print("\nCorrective action: Update pso.local.toml.")
+        print("Replace the existing 'python' entry with:")
+        print(f'  python = "{valid_path}"')
+
+        print("\nWindows 11 path requirements:")
+        print("  - Use an absolute path.")
+        print("  - Use forward slashes (/) instead of backslashes.")
+        print("  - Enclose the path in double quotes.")
+
+        print("\nThen rerun:")
+        print("  python pso_preflight.py")
+        return 1
 
     # ------------------------------------------------------------------
     # Verify aimmspy in the dedicated PSO Python environment.

@@ -93,6 +93,9 @@
 
 from __future__ import annotations
 
+# ------------------------------------------------------------------------------
+# Standard imports
+# ------------------------------------------------------------------------------
 import argparse
 import hashlib
 import json
@@ -111,11 +114,17 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+# ------------------------------------------------------------------------------
+# Project imports
+# ------------------------------------------------------------------------------
 import ercot7k_case as ec  # noqa: E402
 import ercot7k_results as er  # noqa: E402
 
+# ------------------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------------------
 # Global defines
-SECTION_SEPARATOR = "="*80 + "\n"  # for print separation
+SECTION_SEPARATOR = "=" * 80 + "\n"
 SUBSECTION_SEPARATOR = "-"*40 + "\n"  # for print separation
 
 DRIVER_ID = "ercot7k_sweep.py/1"
@@ -2508,7 +2517,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     print("report      : %s" % (sweep_dir / REPORT_NAME))
     return verdict_exit_code(findings)
 
-
+# ------------------------------------------------------------------------------
+# Main execution
+# ------------------------------------------------------------------------------
 if __name__ == "__main__":
     raise SystemExit(main())
 

@@ -17,39 +17,78 @@
 # limitations under the License.
 
 # devnet_menu.py
-# 
+#
 # Purpose
-#   Command-line wrapper for the Datacenter BYOG DoE workflow. Presents a simple menu
-#   that runs the current DevNet scripts in the correct order.
-# 
+#   Unified CLI for ZeroNode's PyPSA DevNet and Polaris PSO ERCOT Texas7k
+#   datacenter modeling and experimental workflows.
+#
 # What it does
-#   - Option 1 runs devnet_cfg.py to generate user-editable DevNet CSV templates.
-#   - Option 2 runs devnet_sld.py to build the baseline USA-lite 6-bus DevNet SLD from CSV config.
-#   - Option 3 runs devnetDC_sld.py to build the Datacenter BYOG DevNet from CSV config.
-#   - Option 4 runs devnet_doe.py to load exported CSV DevNet and run sanity + solve checks.
-#   - Option 5 runs devnet_stress.py for iterative stress testing and commit dashboards.
-#   - Options 6–8 run plotting helpers.
-#   - Provides an exit option and keeps the console tidy between runs.
-# 
+#   - Generates and manages PyPSA DevNet configuration CSVs.
+#   - Builds baseline 6-bus DevNet and datacenter BYOG cases.
+#   - Runs DevNet sanity checks, stress experiments, and plotting workflows.
+#   - Provides a dedicated Polaris PSO ERCOT Texas7k route:
+#       * Run baseline ERCOT7k optimization through AIMMS/CPLEX.
+#       * Screen and rank nodes by LMP separation and stress duration.
+#       * Generate standalone interactive geographic maps of ranked nodes.
+#       * Select screening filters and geographic reference CSVs.
+#       * Initialize and review datacenter/BYOG and stress configuration.
+#       * Build derived cases without modifying the baseline.
+#       * Select and optimize derived ERCOT7k cases.
+#       * Compare baseline and derived results (pending integration).
+#   - Validates PSO/AIMMS dependencies before optimization.
+#   - Uses environment overrides for PSO case selection.
+#   - Supports interactive navigation, confirmations, and CTRL-C handling.
+#
+# Inputs
+#   - devnet_config/*.csv
+#   - ercot7k/texas7k*.csv
+#   - ercot7k_config/*.csv
+#   - ercot7k_geo/texas7k_bus_coords.csv
+#   - ercot7k-runs/<run>/results/*.csv
+#   - pso.local.toml (machine-specific PSO configuration)
+#
 # Outputs
-#   - Delegates outputs to the underlying scripts:
-#     - devnet_config/*.csv
-#     - exported PyPSA CSV folders
-#     - plots/
-#     - logs/
-#     - stress_out/index.html
-
-# Run: devnet_menu.py
+#   - Delegates output generation to the selected scripts:
+#       * devnet_config/, plots/, logs/, stress_out/
+#       * ercot7k_config/, ercot7k-derived/, ercot7k-runs/
+#       * ercot7k-runs/<run>/ercot7k_node_ranked.csv
+#       * geo-plots/ercot7k_node_map.html
+#   - Does not directly modify model inputs or optimization results.
+#
+# Usage
+#   python devnet_menu.py
+#
+#   Main menu option 3:
+#     1) PyPSA DevNet 6-bus datacenter BYOG
+#     2) PSO ERCOT Texas7k
+#
+#   PSO submenu:
+#     1) Run Baseline
+#     2) Screen / Rank ERCOT7k Nodes
+#     3) Plot Ranked ERCOT7k Nodes
+#     4) Configure Derived Case
+#     5) Build Derived Case
+#     6) Run Derived Case
+#     7) Compare Baseline vs Derived Case [PENDING]
+#
+# Usage
+#   python devnet_menu.py
+#
 # ------------------------------------------------------------------------------
 
-
-# Run: devnet_menu.py
-
+# ------------------------------------------------------------------------------
+# Standard imports
+# ------------------------------------------------------------------------------
 import os
 import sys
 import subprocess
+from pathlib import Path
 from datetime import datetime
 
+# ------------------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------------------
+# Global defines
 SECTION_SEPARATOR = "=" * 80
 
 # ------------------------------------------------------------------------------
@@ -67,13 +106,15 @@ def script_path(name: str) -> str:
 
 # ------------------------------------------------------------------------------
 # run_script()
-# Launches the selected DevNet workflow script using the current Python
-# interpreter and returns its process exit code.
-#
-# CTRL-C terminates the active child process cleanly and propagates the
-# interrupt to devnet_menu.py for graceful workflow termination.
+# Executes a sibling Python script with optional CLI arguments and environment
+# overrides. Preserves CTRL-C handling and returns the child exit code.
 # ------------------------------------------------------------------------------
-def run_script(script_name: str) -> int:
+def run_script(
+    script_name: str,
+    args: list[str] | None = None,
+    env_overrides: dict[str, str] | None = None,
+) -> int:
+
     """Run a Python script as a subprocess using the current interpreter."""
     path = script_path(script_name)
 
@@ -104,8 +145,15 @@ def run_script(script_name: str) -> int:
     else:
         popen_kwargs["start_new_session"] = True
 
+    child_env = os.environ.copy()
+
+    if env_overrides:
+        child_env.update(env_overrides)
+
     process = subprocess.Popen(
-        [sys.executable, path],
+        [sys.executable, path] + (args or []),
+        env=child_env,
+        cwd=os.path.dirname(path),
         **popen_kwargs,
     )
 
@@ -133,8 +181,8 @@ def clear_console():
     os.system("cls" if os.name == "nt" else "clear")
 
 # ------------------------------------------------------------------------------
-# print_header()
-# Displays the DevNet workflow description, execution sequence, and usage notes.
+# print_menu()
+# Displays the main PyPSA DevNet operations and datacenter engine selection.
 # ------------------------------------------------------------------------------
 def print_header():
     print(SECTION_SEPARATOR)
@@ -153,16 +201,17 @@ def print_header():
         "     - PyPSA route: build the 6-bus DevNet SLD with Datacenter BYOG\n"
         "       from CSV config (devnetDC_sld.py). Uses devnet_config/devnet_dc.csv\n"
         "       for datacenter bus, load, BYOG capacity and BYOG MC.\n"
-        "     - PSO route: the ERCOT Texas7k public case (6717 buses), driven via\n"
-        "       aimmspy against your own AIMMS install and license. PSO-only: it\n"
-        "       does not build or touch a PyPSA network. Configure pso.local.toml\n"
-        "       first (see pso.local.toml.example).\n"
-        "       The same route builds a derived case layer (ercot7k_build.py):\n"
-        "       it adds a datacenter (fixed load + BYOG) or a stress lever to the\n"
-        "       immutable ercot7k/ base, writing a new case under ercot7k-derived/.\n"
-        "       Run ercot7k_build.py --init once to create ercot7k_config/*.csv,\n"
-        "       edit them, then build; it prints the case = \"...\" line to paste\n"
-        "       into pso.local.toml before running the case.\n"
+        "     - PSO route: ERCOT Texas7k public case (6717 buses), using\n"
+        "       Polaris PSO / AIMMS / CPLEX (separate license required).\n"
+        "       Run baseline optimization, screen/rank candidate nodes,\n"
+        "       configure datacenter BYOG/stress parameters, build derived\n"
+        "       cases, and optimize selected scenarios.\n"
+        "       PSO configuration: pso.local.toml (see example template).\n"
+        "       Research configuration: ercot7k_config/*.csv.\n"
+        "       Baseline ercot7k/ remains immutable.\n"
+        "       Derived cases are written under ercot7k-derived/.\n"
+        "       PSO case selection is handled automatically by the menu.\n"
+
         "\n"
         "  4) Run DoE sanity once (devnet_doe.py)\n"
         "     - Validates the exported DevNet and confirms baseline solve behavior\n"
@@ -240,6 +289,337 @@ def pick_submenu(title: str, choices: list[str], default: int = 1) -> int:
         print("\nInvalid choice.")
 
 # ------------------------------------------------------------------------------
+# confirm_datacenter_route()
+# Displays the selected modeling route and requests confirmation.
+# ------------------------------------------------------------------------------
+def confirm_datacenter_route(route: str) -> bool:
+    print("\n" + "=" * 72)
+
+    if route == "pypsa":
+        print("PyPSA DevNet — Datacenter BYOG")
+        print("-" * 72)
+        print("Build a 6-bus DevNet model with configurable datacenter")
+        print("load, BYOG generation capacity and marginal cost.")
+        print("Configuration: devnet_config/devnet_dc.csv")
+        print("Engine: PyPSA / HiGHS")
+
+    elif route == "pso":
+        print("PSO ERCOT Texas7k — Datacenter Modeling")
+        print("-" * 72)
+        print("Run the ERCOT7k baseline or build a derived case with")
+        print("datacenter load, BYOG generation and stress parameters.")
+        print("Configuration: ercot7k_config/*.csv and pso.local.toml")
+        print("Engine: Polaris PSO / AIMMS / CPLEX")
+        print("Requires a separately installed and licensed PSO environment.")
+
+    else:
+        return False
+
+    print("=" * 72)
+
+    answer = input("\nProceed with selected modeling route? [Y/N]: ")
+    return answer.strip().lower() in ("y", "yes")
+
+
+# ------------------------------------------------------------------------------
+# pso_case_paths()
+# Returns the ERCOT7k baseline and available derived-case control files.
+# ------------------------------------------------------------------------------
+def pso_case_paths() -> tuple[Path, list[Path]]:
+    root = Path(__file__).resolve().parent
+
+    baseline = root / "ercot7k" / "texas7k.csv"
+    derived_root = root / "ercot7k-derived"
+
+    derived = sorted(
+        derived_root.glob("*/texas7k.csv")
+    ) if derived_root.is_dir() else []
+
+    return baseline, derived
+
+
+# ------------------------------------------------------------------------------
+# select_pso_derived_case()
+# Prompts the researcher to select an existing derived case.
+# ------------------------------------------------------------------------------
+def select_pso_derived_case() -> Path | None:
+    _, derived = pso_case_paths()
+
+    if not derived:
+        print("\nNo derived ERCOT7k cases found.")
+        print("Use 'Build Derived Case' first.")
+        return None
+
+    choice = pick_submenu(
+        "Select derived ERCOT7k case:",
+        [path.parent.name for path in derived],
+    )
+
+    if choice == 0:
+        return None
+
+    return derived[choice - 1]
+
+
+# ------------------------------------------------------------------------------
+# run_pso_case()
+# Validates the PSO environment and runs the selected case.
+# ------------------------------------------------------------------------------
+def run_pso_case(case_file: Path, label: str) -> None:
+    if not case_file.is_file():
+        print(f"\nAMW-ERR: PSO case not found:\n\t{case_file}")
+        input("\nPress Enter to return to menu...")
+        return
+
+    print("\nPSO/AIMMS Environment Preflight")
+    print("-" * 45)
+    print(f"Selected case: {label}")
+    print(f"Case file:\n\t{case_file}")
+    print("See README.md -> PSO/AIMMS Environment Dependencies.")
+
+    if input("\nProceed with PSO preflight? [Y/N]: ").strip().lower() not in ("y", "yes"):
+        print("\nPSO execution cancelled.")
+        return
+
+    env = {"DEVNET_PSO_CASE": str(case_file.resolve())}
+
+    rc = run_script("pso_preflight.py", env_overrides=env)
+
+    if rc != 0:
+        print("\nPSO preflight FAILED.")
+        input("Press Enter to return to menu...")
+        return
+
+    rc = run_script("ercot7k_pso.py", env_overrides=env)
+
+    input(
+        f"\nFinished ercot7k_pso.py (exit code {rc}). "
+        "Press Enter to return to menu..."
+    )
+
+# ------------------------------------------------------------------------------
+# configure_pso_derived_case()
+# Initializes or displays the ERCOT7k derived-case configuration.
+# ------------------------------------------------------------------------------
+def configure_pso_derived_case() -> None:
+    root = Path(__file__).resolve().parent
+    config_dir = root / "ercot7k_config"
+
+    required = (
+        config_dir / "ercot7k_dc.csv",
+        config_dir / "ercot7k_stress.csv",
+    )
+
+    if not all(path.is_file() for path in required):
+        print("\nERCOT7k configuration templates are missing.")
+        print("Initializing ercot7k_config/*.csv...\n")
+
+        rc = run_script("ercot7k_build.py", args=["--init"])
+
+        if rc != 0:
+            print("\nConfiguration initialization failed.")
+            input("Press Enter to return to menu...")
+            return
+
+    print("\nActive ERCOT7k configuration:")
+    rc = run_script("ercot7k_build.py", args=["--show-config"])
+
+    print("\nEdit the CSV configuration files before building a derived case.")
+    print(f"Configuration directory:\n\t{config_dir}")
+
+    input(f"\nConfiguration review finished (exit code {rc}). Press Enter...")
+
+
+# ------------------------------------------------------------------------------
+# run_pso_node_screen()
+# Selects an existing PSO result set and launches interactive node screening.
+# Delegates filter review, geographic mapping, and CSV output to the screener.
+# ------------------------------------------------------------------------------
+def run_pso_node_screen() -> None:
+    root = Path(__file__).resolve().parent
+    runs_dir = root / "ercot7k-runs"
+
+    if not runs_dir.is_dir():
+        print("\nASR-ERR: No ERCOT7k run directory found.")
+        print("Run the ERCOT7k baseline first.")
+        input("\nPress Enter to return to menu...")
+        return
+
+    available = sorted(
+        path.name
+        for path in runs_dir.iterdir()
+        if path.is_dir()
+        and (path / "results" / "results_PC_Nd.csv").is_file()
+        and (path / "results" / "results_ED_Ara.csv").is_file()
+    )
+
+    if not available:
+        print("\nASR-ERR: No valid ERCOT7k PSO result sets found.")
+        print("Expected results_PC_Nd.csv and results_ED_Ara.csv.")
+        input("\nPress Enter to return to menu...")
+        return
+
+    selected = pick_submenu(
+        "Select ERCOT7k baseline run for node screening:",
+        available,
+    )
+
+    if selected == 0:
+        return
+
+    run_name = available[selected - 1]
+
+    print("\nERCOT7k Node Screening")
+    print("-" * 72)
+    print(f"Selected run: {run_name}")
+    print("Screen and rank nodes using LMP separation from area balance price.")
+    print("Metrics: max_spread | mean_spread | stress_hours")
+    print("The screening script will confirm filter, geographic, and output CSVs.")
+    print("No AIMMS/CPLEX optimization is performed.")
+
+    if input("\nProceed? [Y/N]: ").strip().lower() not in ("y", "yes"):
+        print("\nASR-DBG: Node screening cancelled.")
+        return
+
+    rc = run_script(
+        "ercot7k_node_screen.py",
+        args=["--run", run_name],
+    )
+
+    input(
+        f"\nFinished ercot7k_node_screen.py (exit code {rc}). "
+        "Press Enter to return to PSO menu..."
+    )
+
+# ------------------------------------------------------------------------------
+# run_pso_geo_plot()
+# Selects ranked ERCOT7k node data and generates an interactive geographic map.
+# ------------------------------------------------------------------------------
+def run_pso_geo_plot() -> None:
+    root = Path(__file__).resolve().parent
+    runs_dir = root / "ercot7k-runs"
+
+    if not runs_dir.is_dir():
+        print("\nASR-ERR: ERCOT7k runs directory not found.")
+        input("Press Enter to return to menu...")
+        return
+
+    available = sorted(
+        runs_dir.rglob("ercot7k_node_ranked.csv")
+    )
+
+    if not available:
+        print("\nASR-ERR: No ranked-node CSV files found.")
+        print("Run 'Screen / Rank ERCOT7k Nodes' first.")
+        input("Press Enter to return to menu...")
+        return
+
+    choice = pick_submenu(
+        "Select ERCOT7k ranked-node dataset:",
+        [str(path.relative_to(runs_dir)) for path in available],
+    )
+
+    if choice == 0:
+        return
+
+    selected = available[choice - 1]
+    output = root / "geo-plots" / "ercot7k_node_map.html"
+
+    print("\nERCOT7k Geographic Plot")
+    print("-" * 72)
+    print(f"Input CSV:\n  {selected}")
+    print(f"Output HTML:\n  {output}")
+    print("Interactive Texas map with ranked nodes and LMP/stress metrics.")
+    print("No PSO optimization is performed.")
+
+    if input("\nProceed? [Y/N]: ").strip().lower() not in ("y", "yes"):
+        print("\nASR-DBG: Geographic plotting cancelled.")
+        return
+
+    rc = run_script(
+        "geo-plots/ercot7k_node_map.py",
+        args=[
+            "--input", str(selected),
+            "--output", str(output),
+        ],
+    )
+
+    if rc == 0:
+        print(f"\nASR-DBG: Geographic plot generated:\n  {output}")
+        print("Open the HTML file in your browser.")
+
+    input(
+        f"\nGeographic plot finished (exit code {rc}). "
+        "Press Enter to return to PSO menu..."
+    )
+
+# ------------------------------------------------------------------------------
+# run_pso_menu()
+# Central entry point for ERCOT7k baseline optimization, node screening,
+# geographic visualization, derived-case configuration, and optimization.
+# Baseline/derived comparison remains pending.
+# ------------------------------------------------------------------------------
+def run_pso_menu() -> None:
+    while True:
+        what = pick_submenu(
+            "PSO route -- ERCOT Texas7k:",
+            [
+                "Run Baseline (ercot7k_pso.py)",
+                "Screen / Rank ERCOT7k Nodes (ercot7k_node_screen.py)",
+                "Plot Ranked ERCOT7k Nodes (geo-plots/ercot7k_node_map.py)",
+                "Configure Derived Case (ercot7k_build.py --init / --show-config)",
+                "Build Derived Case (ercot7k_build.py / ercot7k_case.py)",
+                "Run Derived Case (ercot7k_pso.py)",
+                "Compare Baseline vs Derived Case (ercot7k_results.py) [PENDING]",
+            ],
+        )
+
+        if what == 0:
+            return
+
+
+        if what == 1:
+            baseline, _ = pso_case_paths()
+            run_pso_case(baseline, "ERCOT7k Baseline")
+
+        elif what == 2:
+            run_pso_node_screen()
+
+        elif what == 3:
+            run_pso_geo_plot()
+
+        elif what == 4:
+            configure_pso_derived_case()
+
+        elif what == 5:
+            root = Path(__file__).resolve().parent
+            config_dir = root / "ercot7k_config"
+
+            if not config_dir.is_dir():
+                print("\nERCOT7k configuration not initialized.")
+                print("Use 'Configure Derived Case' first.")
+                input("Press Enter to continue...")
+                continue
+
+            rc = run_script("ercot7k_build.py")
+
+            input(
+                f"\nDerived-case builder finished (exit code {rc}). "
+                "Press Enter to continue..."
+            )
+
+        elif what == 6:
+            selected = select_pso_derived_case()
+
+            if selected is not None:
+                run_pso_case(selected, selected.parent.name)
+
+        elif what == 7:
+            print("\nBaseline/derived comparison is not yet connected.")
+            print("We will integrate ercot7k_results.py after reviewing its interface.")
+            input("Press Enter to continue...")
+
+# ------------------------------------------------------------------------------
 # run_datacenter_case()
 # Option 3: pick the engine route for a datacenter case, then dispatch.
 #
@@ -258,11 +638,15 @@ def run_datacenter_case() -> None:
         "Datacenter case -- select engine route:",
         [
             "PyPSA: DevNet 6-bus SLD with Datacenter BYOG (devnetDC_sld.py)",
-            "PSO:   ERCOT Texas7k public case (6717 buses)",
+            "PSO:   ERCOT Texas7k public case (6717 buses) (ercot7k_pso.py)",
         ],
     )
 
     if route == 1:
+        if not confirm_datacenter_route("pypsa"):
+            print("\nReturning to main menu.")
+            return
+
         rc = run_script("devnetDC_sld.py")
         input(f"\nFinished devnetDC_sld.py (exit code {rc}). Press Enter to return to menu...")
         return
@@ -270,49 +654,11 @@ def run_datacenter_case() -> None:
     if route != 2:
         return
 
-    what = pick_submenu(
-        "PSO route -- ERCOT Texas7k:",
-        [
-            "Run the base case, full cycle (ercot7k_pso.py)",
-            "Build a derived case layer (ercot7k_build.py)",
-            "Run the stress matrix  [NOT YET AVAILABLE]",
-        ],
-    )
+    if not confirm_datacenter_route("pso"):
+        print("\nReturning to main menu.")
+        return
 
-    if what == 1:
-        print("\nPSO/AIMMS Environment Preflight")
-        print("-" * 45)
-        print("Before running the ERCOT Texas7k PSO case,")
-        print("the PSO environment configuration will be validated.")
-        print("See README.md -> PSO/AIMMS Environment Dependencies.\n")
-
-        confirm = input("Proceed with PSO preflight? [Y/N]: ").strip().lower()
-
-        if confirm not in ("y", "yes"):
-            print("\nPSO execution cancelled. Returning to main menu.")
-            input("Press Enter to continue...")
-            return
-
-        rc = run_script("pso_preflight.py")
-
-        if rc != 0:
-            print("\nPSO preflight FAILED.")
-            print("See README.md -> PSO/AIMMS Environment Dependencies.")
-            input("Press Enter to return to main menu...")
-            return
-
-        rc = run_script("ercot7k_pso.py")
-        input(
-            f"\nFinished ercot7k_pso.py (exit code {rc}). "
-            "Press Enter to return to menu..."
-        )
-    elif what == 2:
-        rc = run_script("ercot7k_build.py")
-        input(f"\nFinished ercot7k_build.py (exit code {rc}). Press Enter to return to menu...")
-    elif what == 3:
-        print("\nAMW-DBG: The Texas7k stress matrix is not part of this build.")
-        print("It arrives with the case-builder work; until then use the base case.\n")
-        input("Press Enter to return to menu...")
+    run_pso_menu()
 
 # ------------------------------------------------------------------------------
 # main()

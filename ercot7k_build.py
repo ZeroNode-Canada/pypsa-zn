@@ -51,6 +51,9 @@
 # Run: python ercot7k_build.py [--init]
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+# Standard imports
+# ------------------------------------------------------------------------------
 import io
 import logging
 import os
@@ -58,10 +61,19 @@ import shutil
 import sys
 from datetime import datetime
 
+# ------------------------------------------------------------------------------
+# Third-party imports
+# ------------------------------------------------------------------------------
 import pandas as pd
 
+# ------------------------------------------------------------------------------
+# Project imports
+# ------------------------------------------------------------------------------
 import ercot7k_case as ec
 
+# ------------------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------------------
 # Global defines
 SECTION_SEPARATOR = "="*80 + "\n"  # for print separation
 SUBSECTION_SEPARATOR = "-"*40 + "\n"  # for print separation
@@ -95,9 +107,9 @@ USAGE = (
     "  --help          print this text\n"
 )
 
-
 # ------------------------------------------------------------------------------
-#   Helper functions
+# confirm()
+# Requests confirmation before performing an operation.
 # ------------------------------------------------------------------------------
 def confirm(prompt: str) -> bool:
     ans = input(f"{prompt} (Y/N): ").strip().lower()
@@ -277,9 +289,13 @@ def init_config() -> int:
     print(f"\tEdit CSVs in:\n\t{CONFIG_PATH}\n")
     print("Then run:")
     print("\tpython ercot7k_build.py\n")
-    print(SECTION_SEPARATOR)
-    return 0
 
+    print(SECTION_SEPARATOR)
+
+    print("\nAMW-DBG::Showing initialized configuration")
+    print("Equivalent command: python ercot7k_build.py --show-config\n")
+
+    return show_config(CONFIG_PATH)
 
 # ------------------------------------------------------------------------------
 # candidate_parents()
@@ -410,16 +426,34 @@ def build() -> int:
     print(SECTION_SEPARATOR)
     print(f"AMW-DBG::ercot7k config path::\n\t{CONFIG_PATH}\n")
 
-    if not os.path.isdir(CONFIG_PATH):
-        print("AMW-ERR: ercot7k_config folder not found.")
-        print("Run: python ercot7k_build.py --init")
+    # ------------------------------------------------------------------
+    # Validate derived-case configuration before proceeding.
+    # ------------------------------------------------------------------
+    required_csvs = (DC_CSV, STRESS_CSV)
+
+    missing = [
+        name for name in required_csvs
+        if not os.path.isfile(os.path.join(CONFIG_PATH, name))
+    ]
+
+    if missing:
+        print("\nAMW-ERR: ERCOT7k configuration is not initialized.")
+        print(f"Configuration directory:\n\t{CONFIG_PATH}")
+        print(f"Missing CSV(s): {', '.join(missing)}")
+
+        print("\nCorrective action:")
+        print("From the pypsa-zn repository root, run:")
+        print("  python ercot7k_build.py --init")
+
+        print("\nReview the generated configuration:")
+        print("  python ercot7k_build.py --show-config")
+
+        print("\nThen build the derived case:")
+        print("  python ercot7k_build.py")
+        print("\nNo derived case was written.\n")
         return 2
 
     csv_files = sorted(f for f in os.listdir(CONFIG_PATH) if f.endswith(".csv"))
-    if not csv_files:
-        print("AMW-ERR: No CSV files found in ercot7k_config.")
-        print("Run: python ercot7k_build.py --init")
-        return 2
 
     print("AMW-DBG::CSV files found:")
     for name in csv_files:
@@ -431,6 +465,14 @@ def build() -> int:
     if not parents:
         print(f"AMW-ERR: no case directory found at:\n\t{BASE_CASE_PATH}")
         return 2
+
+    print(SUBSECTION_SEPARATOR)
+    print("ERCOT7k Builder — Available Commands")
+    print("  --init         Create/reinitialize configuration CSV templates")
+    print("  --show-config  Display active datacenter and stress parameters")
+    print("  --help         Display builder usage information")
+    print("\nCurrent operation: Build a derived ERCOT7k case.")
+    print(SUBSECTION_SEPARATOR)
 
     print("Select the parent case to build on:")
     for index, path in enumerate(parents, start=1):
@@ -516,12 +558,12 @@ def build() -> int:
 
     case_line = f'case = "ercot7k-derived/{out_name}/texas7k.csv"'
     print(SECTION_SEPARATOR)
-    print("Layer written. Paste this line into pso.local.toml, then run "
-          "ercot7k_pso.py (menu option 12):\n")
+    print("Layer written. Select 'Run Derived Case' from the")
+    print("PSO ERCOT Texas7k submenu in devnet_menu.py.\n")
+    print("Case reference (for direct CLI execution):")
     print(f"\t{case_line}\n")
     print(SECTION_SEPARATOR)
     return 0
-
 
 # ------------------------------------------------------------------------------
 # _read_dc_spec()
@@ -633,7 +675,6 @@ def _report_datacenter(tables: dict, summary: dict, spec) -> bool:
     print("")
     return True
 
-
 # ------------------------------------------------------------------------------
 # _read_stress_rows()
 # ------------------------------------------------------------------------------
@@ -698,7 +739,6 @@ class Tee(io.TextIOBase):
                 except Exception:
                     pass
 
-
 STAGING_LOG_DIR = os.path.join(DERIVED_ROOT, "logs")
 os.makedirs(STAGING_LOG_DIR, exist_ok=True)
 LOG_NAME = f"ercot7k_build_{TS}.log"
@@ -724,7 +764,7 @@ logging.basicConfig(
 print(f"Saving logs to: {LOG_NAME}")
 
 # ------------------------------------------------------------------------------
-#   Entry point
+# Main execution
 # ------------------------------------------------------------------------------
 _rc = 1
 try:

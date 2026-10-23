@@ -48,6 +48,9 @@
 # Run: ercot7k_pso.py
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+# Standard imports
+# ------------------------------------------------------------------------------
 import csv
 import glob
 import importlib.util
@@ -62,6 +65,9 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+# ------------------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------------------
 # Global defines
 SECTION_SEPARATOR = "="*80 + "\n"  # for print separation
 SUBSECTION_SEPARATOR = "-"*40 + "\n"  # for print separation
@@ -76,7 +82,8 @@ TS = datetime.now().strftime("%Y%m%d-%H%M%S")
 DEFAULT_CASE = os.path.join("ercot7k", "texas7k.csv")
 
 # ------------------------------------------------------------------------------
-#   Helper functions
+# confirm()
+# Requests confirmation before launching the PSO solve.
 # ------------------------------------------------------------------------------
 def confirm(prompt: str) -> bool:
     ans = input(f"{prompt} (Y/N): ").strip().lower()
@@ -275,8 +282,8 @@ def print_pso_error_logs(project_path: str, err_offset: int = 0,
     print(SUBSECTION_SEPARATOR)
 
 # ------------------------------------------------------------------------------
-#   Load pso.local.toml -> DEVNET_PSO_* env defaults (must precede reading
-#   any DEVNET_PSO_* var below).
+# Main execution
+# Load PSO configuration, resolve the interpreter, and execute the solve.
 # ------------------------------------------------------------------------------
 sys.path.insert(0, SCRIPT_DIR)
 try:

@@ -34,7 +34,11 @@
 # arrived in 3.11). Where tomllib or tomli is importable it is used; otherwise a
 # built-in parser reads the flat "key = value" form above. No extra dependency
 # either way, and a config file that exists is never silently ignored.
+# ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+# Standard imports
+# ------------------------------------------------------------------------------
 import os
 from pathlib import Path
 
@@ -53,6 +57,9 @@ except ModuleNotFoundError:  # pragma: no cover
 class ConfigError(RuntimeError):
     """pso.local.toml exists but could not be read."""
 
+# ------------------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------------------
 REPO = Path(__file__).resolve().parent
 CONFIG_FILE = REPO / "pso.local.toml"
 
@@ -66,7 +73,10 @@ _MAP = {
     "python":        "DEVNET_PSO_PYTHON",
 }
 
-
+# ------------------------------------------------------------------------------
+# parse_flat_toml()
+# Parses flat TOML configuration when tomllib/tomli is unavailable.
+# ------------------------------------------------------------------------------
 def parse_flat_toml(text: str) -> dict:
     """
     Read the flat 'key = value' subset that pso.local.toml uses.
@@ -115,7 +125,10 @@ def parse_flat_toml(text: str) -> dict:
 
     return out
 
-
+# ------------------------------------------------------------------------------
+# load_config()
+# Loads PSO configuration without overriding existing environment variables.
+# ------------------------------------------------------------------------------
 def load_config(path: Path = CONFIG_FILE) -> dict:
     """Apply pso.local.toml as env defaults (existing env vars take precedence)."""
     path = Path(path)
@@ -148,11 +161,53 @@ def load_config(path: Path = CONFIG_FILE) -> dict:
     return applied
 
 
+# ------------------------------------------------------------------------------
+# Main execution
+# ------------------------------------------------------------------------------
 if __name__ == "__main__":
-    applied = load_config()
+    if not CONFIG_FILE.is_file():
+        print("\nAMW-ERR: PSO configuration file not found.")
+        print(f"Expected:\n\t{CONFIG_FILE}")
+
+        print("\nFrom the pypsa-zn repository root, run in PowerShell:")
+        print(r"  Copy-Item .\pso.local.toml.example .\pso.local.toml")
+
+        print("\nEdit pso.local.toml to configure:")
+        print("  project     = absolute path to PSO.aimms")
+        print("  python      = absolute path to PSO Python with aimmspy")
+        print("  case        = ercot7k/texas7k.csv (baseline default)")
+        print("  license_url = AIMMS license URL, if required")
+
+        print("\nWindows 11 path requirements:")
+        print("  - Use absolute paths for 'project' and 'python'.")
+        print("  - Replace all backslashes (\\) with forward slashes (/).")
+        print("  - Enclose paths in double quotes.")
+
+        print("\nExample:")
+        print('  project = "C:/AIMMS/PSO/PSO.aimms"')
+        print('  python  = "C:/pypsa-zn/.venv-pso/Scripts/python.exe"')
+
+        print("\nThen validate the environment:")
+        print("  python pso_preflight.py")
+        print("\nSee README.md -> PSO/AIMMS Environment Dependencies.\n")
+        raise SystemExit(1)
+
+    try:
+        applied = load_config()
+    except (ConfigError, OSError, ValueError) as exc:
+        print(f"\nAMW-ERR: Cannot load pso.local.toml: {exc}")
+        raise SystemExit(1)
+
     if applied:
-        print(f"loaded {CONFIG_FILE} with {PARSER}:")
-        for k, v in applied.items():
-            print(f"  {k} = {v}")
+        print(f"\nAMW-DBG::PSO configuration loaded from:\n\t{CONFIG_FILE}")
+        for key, value in applied.items():
+            print(f"  {key} = {value}")
     else:
-        print(f"no config applied (missing {CONFIG_FILE} or all keys already in env)")
+        print("\nAMW-INFO: PSO configuration file exists.")
+        print("No new settings applied; existing environment overrides may be active.")
+
+    print("\nNext: python pso_preflight.py")
+
+# ------------------------------------------------------------------------------
+# END OF pso_config.py
+# ------------------------------------------------------------------------------
